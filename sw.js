@@ -1,0 +1,10 @@
+const CACHE='citywalk-static-v1';
+const FILES=['./','./index.html','./style.css','./app.mjs','./views.mjs','./core.mjs','./cards.mjs','./storage.mjs','./manifest.webmanifest','./icon-192.png','./icon-180.png','./icon-512.png','./icon-maskable.png'];
+const absolute=path=>new URL(path,self.registration.scope).href;
+self.addEventListener('install',event=>event.waitUntil((async()=>{
+ const cache=await caches.open(CACHE);
+ try {const entries=await Promise.all(FILES.map(async path=>{const request=new Request(absolute(path),{cache:'reload'}),response=await fetch(request);if(!response.ok||response.redirected)throw Error('Offline resource unavailable');const type=response.headers.get('content-type')||'';if((path.endsWith('.mjs')||path.endsWith('.js'))&&!/javascript/.test(type))throw Error('Invalid script response');return[request,response];}));await Promise.all(entries.map(([request,response])=>cache.put(request,response)));await cache.put(absolute('./offline-ready'),new Response('ready'));}catch(e){await caches.delete(CACHE);throw e;}
+})()));
+self.addEventListener('activate',event=>event.waitUntil((async()=>{for(const key of await caches.keys())if(key.startsWith('citywalk-static-')&&key!==CACHE)await caches.delete(key);await self.clients.claim();for(const client of await self.clients.matchAll())client.postMessage({type:'CACHE_READY'});})()));
+self.addEventListener('message',event=>{if(event.data?.type==='SKIP_WAITING')self.skipWaiting();if(event.data?.type==='CHECK_CACHE')event.source?.postMessage({type:'CACHE_READY'});});
+self.addEventListener('fetch',event=>{const url=new URL(event.request.url);if(event.request.method!=='GET'||url.origin!==self.location.origin)return;const paths=FILES.map(absolute);if(event.request.mode==='navigate'){event.respondWith((async()=>{const cached=await caches.match(absolute('./index.html'));return cached||fetch(event.request);})());}else if(paths.includes(url.href)){event.respondWith((async()=>{const cached=await caches.match(event.request);return cached||fetch(event.request);})());}});
