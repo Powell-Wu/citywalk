@@ -1,9 +1,10 @@
+import {setTheme} from './themes.mjs';
 import {CARDS,TYPES} from './cards.mjs';
 export {CARDS,TYPES};
 export const MODES={short:{name:'轻轻走一会',duration:75,sequence:['scene','talk','event','talk']},half:{name:'把半天留给我们',duration:240,sequence:['scene','talk','event','scene','talk','event','talk']},free:{name:'自由走走',duration:0,sequence:[]}};
 export const REWARDS=['一起吃份甜品','由你挑选下次约会','约好一次喜欢的大餐'];
 export const uid=()=>globalThis.crypto.randomUUID();
-export function initialState(){return{version:1,revision:0,session:null,history:[],customCards:[],disabled:[],favorites:[],preferences:{mode:'short',place:'both',budget:0,scoring:true,rewards:[...REWARDS]},offlineReady:false};}
+export function initialState(){return{version:1,revision:0,theme:'warm',session:null,history:[],customCards:[],disabled:[],favorites:[],preferences:{mode:'short',place:'both',budget:0,scoring:true,rewards:[...REWARDS]},offlineReady:false};}
 export function allCards(s){return [...CARDS,...s.customCards];}
 export function score(session){const done=session.slots.filter(x=>x.status==='done');const base=done.reduce((n,x)=>n+TYPES[x.type].points,0);const trio=new Set(done.map(x=>x.type)).size===3?2:0;const bonus=Number(session.bonuses.surprise)+Number(session.bonuses.laugh);return{base,trio,bonus,closing:session.closing?4:0,total:base+trio+bonus+(session.closing?4:0),count:done.length};}
 export function spent(session){return Math.round(session.slots.filter(x=>x.status==='done').reduce((n,x)=>n+(x.spent||0),0)*100)/100;}
@@ -41,5 +42,5 @@ function validSession(se,ended){
 }
 export function validateBackup(raw){
  if(!raw||raw.version!==1||!Array.isArray(raw.history)||raw.history.length>300||!Array.isArray(raw.customCards)||raw.customCards.length>500||!Array.isArray(raw.disabled)||!Array.isArray(raw.favorites)||!(raw.session===null||typeof raw.session==='object'))throw Error('这不是支持的备份文件。');
- validateConfig(raw.preferences);raw.customCards.forEach(validateCustomCard);if(new Set(raw.customCards.map(x=>x.id)).size!==raw.customCards.length)throw Error('自定义卡片编号重复。');for(const a of [raw.disabled,raw.favorites])if(a.length>1000||a.some(x=>!validId(x)))throw Error('备份的卡片偏好不正确。');raw.history.forEach(x=>validSession(x,true));if(raw.session)validSession(raw.session,false);const sessionIds=[...raw.history.map(x=>x.id),...(raw.session?[raw.session.id]:[])];if(new Set(sessionIds).size!==sessionIds.length)throw Error('备份的行程编号重复。');const clean=initialState();for(const key of ['session','history','customCards','disabled','favorites','preferences'])clean[key]=structuredClone(raw[key]);return clean;
+ validateConfig(raw.preferences);raw.customCards.forEach(validateCustomCard);if(new Set(raw.customCards.map(x=>x.id)).size!==raw.customCards.length)throw Error('自定义卡片编号重复。');for(const a of [raw.disabled,raw.favorites])if(a.length>1000||a.some(x=>!validId(x)))throw Error('备份的卡片偏好不正确。');raw.history.forEach(x=>validSession(x,true));if(raw.session)validSession(raw.session,false);const sessionIds=[...raw.history.map(x=>x.id),...(raw.session?[raw.session.id]:[])];if(new Set(sessionIds).size!==sessionIds.length)throw Error('备份的行程编号重复。');const clean=initialState();if(raw.theme!==undefined)setTheme(clean,raw.theme);for(const key of ['session','history','customCards','disabled','favorites','preferences'])clean[key]=structuredClone(raw[key]);return clean;
 }

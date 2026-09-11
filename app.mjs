@@ -1,6 +1,7 @@
 import {TYPES,REWARDS,uid,initialState,allCards,score,elapsed,newSession,activeSession,draw,replaceCard,complete,setSlotStatus,undo,togglePause,finish,validateCustomCard,validateBackup} from './core.mjs';
 import {readState,updateState} from './storage.mjs';
 import {renderView,currentSlot,dueText,timeText,esc,button,filterForm} from './views.mjs';
+import {THEMES,themeOf,setTheme,themePicker} from './themes.mjs';
 const app=document.querySelector('#app');
 let state=initialState(),ready=false,busy=false,updateWaiting=null;
 const ui={focusSlot:null,libraryType:'all',libraryFavorites:false,customEditor:false,offlineReady:false,storageError:'',updateWaiting:false};
@@ -8,11 +9,29 @@ const channel=typeof BroadcastChannel!=='undefined'?new BroadcastChannel('citywa
 const route=()=>{const[name,id]=location.hash.slice(1).split('/');return{name:name||'home',id};};
 const go=name=>{if(location.hash===`#${name}`)render();else location.hash=name;window.scrollTo({top:0,behavior:'instant'});};
 function toast(text){const el=document.querySelector('#toast');el.textContent=text;el.classList.add('visible');clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.classList.remove('visible'),4200);}
-function render(){const{name,id}=route();app.innerHTML=renderView(state,ui,name,id);}
+function applyTheme(){
+ const theme=themeOf(state);
+ document.documentElement.dataset.theme=theme;
+ document.querySelector('meta[name="theme-color"]').content=THEMES[theme].color;
+ try{localStorage.setItem('citywalk-theme',theme);}catch{}
+ document.querySelectorAll('[data-theme-choice]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.themeChoice===theme)));
+ document.querySelectorAll('[data-theme-status]').forEach(el=>el.textContent=el.dataset.themeStatus===theme?'使用中':'选择');
+}
+async function chooseTheme(theme){await mutate(s=>setTheme(s,theme));applyTheme();}
+function skinsDialog(){
+ const d=document.createElement('dialog');d.className='dialog skin-dialog';d.setAttribute('aria-labelledby','skin-title');
+ d.innerHTML=`<div class="page-head"><h2 id="skin-title">给今天换个心情</h2><button type="button" class="btn text" data-close>完成</button></div><p class="help">随时切换，散步进度和当前输入都会保留。</p>${themePicker(state)}`;
+ document.body.append(d);d.addEventListener('close',()=>d.remove(),{once:true});
+ d.addEventListener('click',async e=>{if(e.target.closest('[data-close]')){d.close();return;}const b=e.target.closest('[data-theme-choice]');if(!b||busy)return;try{await chooseTheme(b.dataset.themeChoice);}catch(err){toast(err.message);}});
+ d.showModal();
+}
+function render(){applyTheme();const{name,id}=route();app.innerHTML=renderView(state,ui,name,id);}
 async function mutate(fn){if(busy)throw Error('正在保存，请稍等一下。');busy=true;try{const r=await updateState(fn);state=r.state;ui.storageError='';channel?.postMessage(state.revision);return r.result;}catch(e){if(/存储|保存|读取|中断/.test(e.message||''))ui.storageError=e.message;throw e;}finally{busy=false;}}
 function confirmBox(title,text,yes='确认'){return new Promise(resolve=>{const d=document.createElement('dialog');d.className='dialog';d.innerHTML=`<h2>${esc(title)}</h2><p>${esc(text)}</p><div class="actions"><button class="btn outline" data-choice="no">先不改</button><button class="btn" data-choice="yes">${esc(yes)}</button></div>`;document.body.append(d);let settled=false;const end=v=>{if(settled)return;settled=true;d.close();d.remove();resolve(v);};d.addEventListener('cancel',e=>{e.preventDefault();end(false);});d.addEventListener('click',e=>{const choice=e.target.closest('[data-choice]')?.dataset.choice;if(choice)end(choice==='yes');});d.showModal();});}
 function filtersDialog(){if(!state.session)return;const d=document.createElement('dialog');d.className='dialog';d.innerHTML=filterForm(state.session);document.body.append(d);d.querySelector('[data-close]').onclick=()=>d.close();d.addEventListener('close',()=>d.remove(),{once:true});d.showModal();}
 app.addEventListener('click',async event=>{const b=event.target.closest('[data-action]');if(!b||busy)return;const d=b.dataset;try{switch(d.action){
+case'skins':skinsDialog();return;
+case'set-theme':await chooseTheme(d.themeChoice);return;
 case'nav':go(d.route);return;
 case'reload':await boot();return;
 case'draw':ui.focusSlot=await mutate(s=>draw(s,d.session,d.slot,d.type));break;
@@ -45,8 +64,8 @@ case'filters-form':await mutate(s=>{const se=activeSession(s,f.dataset.session);
 async function exportBackup(){const latest=await readState();const blob=new Blob([JSON.stringify(latest,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`一起走走-备份-${new Date().toISOString().slice(0,10)}.json`;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);toast('备份已生成，请在下载文件中确认保存。');}
 app.addEventListener('change',async e=>{if(e.target.id!=='backup-file')return;const file=e.target.files[0];if(!file)return;try{if(file.size>5*1024*1024)throw Error('备份文件超过5MB，请选择有效的文字备份。');let raw;try{raw=JSON.parse(await file.text());}catch{throw Error('文件不是有效的JSON备份。');}const clean=validateBackup(raw);if(!await confirmBox('用备份替换本机记录？',`备份有 ${clean.history.length} 段历史、${clean.customCards.length} 张自定义卡${clean.session?'和一局进行中的散步':''}。当前记录将被替换。`,'导入并替换'))return;await mutate(s=>{const revision=s.revision;Object.assign(s,clean,{revision});});ui.focusSlot=null;render();toast('备份已恢复到这部设备。');}catch(e){toast(e.message);}finally{e.target.value='';}});
 window.addEventListener('hashchange',()=>{if(ready)render();});
-channel?.addEventListener('message',async()=>{try{state=await readState();if(!document.querySelector('dialog[open]')&&!['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName))render();else toast('记录在另一页有更新，当前输入为你保留。');}catch(e){toast(e.message);}});
-document.addEventListener('visibilitychange',async()=>{if(document.visibilityState==='visible'&&ready&&!busy){try{state=await readState();if(['walk','home','history','detail'].includes(route().name))render();}catch(e){toast(e.message);}}});
+channel?.addEventListener('message',async()=>{try{state=await readState();applyTheme();if(!document.querySelector('dialog[open]')&&!['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName))render();else toast('记录在另一页有更新，当前输入为你保留。');}catch(e){toast(e.message);}});
+document.addEventListener('visibilitychange',async()=>{if(document.visibilityState==='visible'&&ready&&!busy){try{state=await readState();applyTheme();if(['walk','home','history','detail'].includes(route().name))render();}catch(e){toast(e.message);}}});
 setInterval(()=>{const se=state.session;if(!se||route().name!=='walk')return;const clock=document.querySelector('[data-elapsed]');if(clock)clock.textContent=timeText(elapsed(se));const due=document.querySelector('[data-due]');if(due)due.textContent=dueText(se,currentSlot(se,ui.focusSlot));},15000);
 async function checkCache(){try{if(!('caches' in window))return;ui.offlineReady=!!await caches.match(new URL('./offline-ready',document.baseURI).href);document.querySelectorAll('[data-offline]').forEach(el=>el.textContent=ui.offlineReady?'✓ 离线内容已准备好':'离线尚未准备好，请联网打开并等待片刻。');}catch{ui.offlineReady=false;}}
 async function prepareOffline(){if(!('serviceWorker' in navigator)||!window.isSecureContext)return;try{const reg=await navigator.serviceWorker.register('./sw.js',{scope:'./',updateViaCache:'none'});updateWaiting=reg.waiting;ui.updateWaiting=!!reg.waiting;reg.addEventListener('updatefound',()=>{reg.installing?.addEventListener('statechange',()=>{if(reg.waiting){updateWaiting=reg.waiting;ui.updateWaiting=true;if(!state.session)toast('有新版本，下次空闲时可在设置中更新。');}checkCache();});});await checkCache();reg.active?.postMessage({type:'CHECK_CACHE'});}catch{ui.offlineReady=false;}}
