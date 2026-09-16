@@ -9,8 +9,9 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="一起走走">
   <title>一起走走 · 情侣 CityWalk</title>
-  <script>try{const t=localStorage.getItem('citywalk-theme');if(t==='adventure'){document.documentElement.dataset.theme=t;document.querySelector('meta[name="theme-color"]').content='#151e25';}}catch{}</script>
+  <script>try{const t=localStorage.getItem('citywalk-theme');if(t==='adventure'||t==='story'){document.documentElement.dataset.theme=t;document.querySelector('meta[name="theme-color"]').content=t==='story'?'#292c29':'#151e25';}}catch{}</script>
   <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./story.css">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icon-192.png" type="image/png">
   <link rel="apple-touch-icon" href="./icon-180.png">

@@ -1,0 +1,72 @@
+/* All card decoration lives in the third skin, keeping form nodes intact on switch. */
+.story-only{display:none}.card-stage{position:relative}
+.theme-options{grid-template-columns:repeat(3,minmax(0,1fr))}.skin-dialog{max-width:700px}
+.preview-story{background:#343831;color:#eddcb8;border-radius:3px}
+.preview-story .preview-card{background:#ebddbc;color:#38342b;border:2px solid #292c29;box-shadow:3px 3px 0 #a8926b;border-radius:2px}
+.preview-story .preview-bar{background:#a85439}
+:root[data-theme=story]{color-scheme:dark;--paper:#292c29;--white:#343931;--ink:#f0e6cb;--muted:#c1b99f;--line:#626550;--accent:#e2bb75;--soft:#464b3c;--green:#b7c79c;--blue:#b3c6cb;--radius:4px}
+[data-theme=story] body{background:radial-gradient(ellipse at 50% 25%,#464c3b 0, #292c29 75%) fixed;overflow-x:clip}
+[data-theme=story] .brand{padding-bottom:18px;border-bottom:1px solid var(--line)}
+[data-theme=story] .brand-mark{background:var(--accent);color:#292c29;border-radius:3px;box-shadow:3px 3px 0 #181b18}
+[data-theme=story] h1,[data-theme=story] h2,[data-theme=story] .ticket-title{font-family:Georgia,'Songti SC',SimSun,serif;font-weight:700}
+[data-theme=story] .brand-meta,[data-theme=story] .eyebrow,[data-theme=story] .ticket-top{letter-spacing:.14em;color:var(--accent)}
+[data-theme=story] .btn{border-radius:3px;background:var(--accent);color:#302e26;border:1px solid #f0d49f;box-shadow:0 3px 0 #151b18}
+[data-theme=story] .btn.secondary{background:var(--soft);color:var(--ink);border-color:var(--line)}
+[data-theme=story] .btn.outline{background:transparent;color:var(--ink);border-color:var(--line)}
+[data-theme=story] .btn.text{background:transparent;color:var(--muted);border-color:transparent;box-shadow:none}
+[data-theme=story] .btn.danger{background:#573c32;color:#ffd6bd}
+[data-theme=story] .btn:active:not(:disabled){translate:0 1px}
+[data-theme=story] .panel,[data-theme=story] .ticket{border:1px solid var(--line);box-shadow:4px 4px 0 #1d211e}
+[data-theme=story] input,[data-theme=story] select,[data-theme=story] textarea,[data-theme=story] .mode,[data-theme=story] .list-item,[data-theme=story] .chip,[data-theme=story] .dialog,[data-theme=story] .theme-option{border-radius:3px}
+[data-theme=story] input::placeholder,[data-theme=story] textarea::placeholder{color:#bab29c;opacity:1}
+[data-theme=story] .tag{border-radius:3px;background:#464b3c;color:var(--ink);border:1px solid var(--line)}
+[data-theme=story] .tag.scene{background:#424c3a;color:#d7e6c7}
+[data-theme=story] .tag.talk{background:#394b4e;color:#d3e4e5}
+[data-theme=story] .tag.event{background:#5a4630;color:#f4d9a1}
+[data-theme=story] .nav{background:#292c29f5;border-top:1px solid var(--line)}
+[data-theme=story] .nav button{border-radius:3px}
+[data-theme=story] .nav button.active{box-shadow:inset 0 -2px var(--accent)}
+[data-theme=story] #toast{background:#f0e6cb;color:#292c29;border-radius:3px}
+[data-theme=story] .dialog::backdrop{background:#111610b8}
+[data-theme=story] .hero-num{color:#929b79}
+[data-theme=story] .score-bar{max-width:430px;margin:0 auto 25px;border-bottom:1px solid var(--line);padding-bottom:18px}
+[data-theme=story] .score-value,[data-theme=story] .badge-number{font-family:Georgia,serif;color:var(--accent)}
+[data-theme=story] .step{border-radius:3px;background:#3c4437;color:#d6d7bd;border:1px solid var(--line)}
+[data-theme=story] .step.done{background:#c3cda1;color:#303727}
+[data-theme=story] .card-stage{isolation:isolate;max-width:430px;margin:0 auto 32px;padding-top:8px}
+[data-theme=story] .story-only{display:block}
+[data-theme=story] .card-back{position:absolute;inset:8px 10px 73px;background:#7a8060;border:3px solid #191f1a;border-radius:8px;z-index:-1;box-shadow:inset 0 0 0 5px #b1ad87,inset 0 0 0 7px #5c624a;pointer-events:none}
+[data-theme=story] .card-back-far{transform:rotate(-4deg) translateY(8px)}
+[data-theme=story] .card-back-near{transform:rotate(3deg) translateY(4px);background:#9c946e}
+[data-theme=story] .task-card{position:relative;--white:#f0e3c5;--ink:#38352c;--muted:#6f634e;--line:#b8a887;--accent:#995038;--soft:#e0d0ab;--green:#5d704f;--blue:#536d70;--left-choice:0;--right-choice:0;background:#f0e3c5;color:#38352c;border:3px solid #20271f;border-radius:7px;padding:0 22px 16px;box-shadow:0 10px 25px #0004;transform-origin:50% 80%;transition:transform 280ms cubic-bezier(.2,.85,.2,1);animation:none;min-height:0;margin-bottom:18px}
+[data-theme=story] .task-card[data-swipe-card]{touch-action:pan-y pinch-zoom;cursor:grab;user-select:none;-webkit-user-select:none}
+[data-theme=story] .task-card.is-dragging{transition:none;cursor:grabbing;will-change:transform}
+[data-theme=story] .task-card input{user-select:text;-webkit-user-select:text}
+[data-theme=story] .story-art{height:180px;margin:0 -22px 17px;overflow:hidden;position:relative;border-radius:4px 4px 0 0;border-bottom:3px solid #303729;background:#9c946e}
+[data-theme=story] .story-art img{display:block;width:100%;height:100%;object-fit:cover;object-position:center;pointer-events:none}
+[data-theme=story] .story-art-caption{position:absolute;bottom:10px;left:14px;background:#252b23e8;border:1px solid #c3bd94;color:#f4e5bf;font-size:.75rem;letter-spacing:.14em;padding:2px 10px}
+[data-theme=story] .task-card h2{font-size:1.45rem;line-height:1.55;margin:15px 0 13px;letter-spacing:.015em}
+[data-theme=story] .task-card .task-meta{font-size:.8125rem;gap:8px;margin-bottom:10px}
+[data-theme=story] .task-card .task-note{font-size:.875rem;margin-bottom:15px;line-height:1.6}
+[data-theme=story] .task-card .tag{font-size:.75rem;padding:2px 8px;border-color:#b0a27e;background:#e1d8b6;color:#4d6141}
+[data-theme=story] .task-card .tag.talk{background:#d3ded5;color:#405f61}
+[data-theme=story] .task-card .tag.event{background:#ead1a4;color:#80452f}
+[data-theme=story] .task-card .btn{min-height:46px;padding:10px 12px;background:#995038;border-color:#7c402d;color:#fff4dc;box-shadow:0 2px 0 #673b2a}
+[data-theme=story] .task-card .btn.text{min-height:44px;background:transparent;color:#67563f;border:0;box-shadow:none;font-size:.875rem;padding:8px 2px}
+[data-theme=story] .task-card .eyebrow{color:#7b593a}
+[data-theme=story] .task-card input{color:#38352c;background:#fbefd4}
+[data-theme=story] .task-card .actions{gap:8px}
+[data-theme=story] .swipe-choice{position:absolute;top:38px;z-index:2;padding:8px 15px;border:3px solid currentColor;border-radius:4px;font-weight:750;font-size:1.35rem;pointer-events:none;background:#f6eaccf5;box-shadow:0 4px 14px #0003;line-height:1.4}
+[data-theme=story] .swipe-choice span{display:block;font-size:.6875rem;letter-spacing:.08em}
+[data-theme=story] .choice-left{right:18px;color:#995038;opacity:var(--left-choice);transform:rotate(9deg)}
+[data-theme=story] .choice-right{left:18px;color:#4b6846;opacity:var(--right-choice);transform:rotate(-9deg)}
+[data-theme=story] .task-card:not(.swipe-ready) .swipe-choice span{visibility:hidden}
+[data-theme=story] .swipe-guide{text-align:center;font-size:.8125rem;color:#ebd4a4;margin:0 0 3px;letter-spacing:.05em}
+[data-theme=story] .deck-count{text-align:center;font-size:.75rem;color:var(--muted);margin:0}
+[data-theme=story] .card-enter{animation:deal-card 300ms cubic-bezier(.2,.75,.25,1) both}
+[data-theme=story] .score-pop{animation:score-pop 350ms ease-out}
+@keyframes deal-card{from{opacity:0;transform:translateY(16px) scale(.95) rotate(-2deg)}to{opacity:1;transform:translateY(0) scale(1) rotate(0)}}
+@keyframes score-pop{50%{transform:scale(1.13);color:#fff0b8}}
+@media(max-width:700px){.theme-options{grid-template-columns:1fr}.theme-option{display:grid;grid-template-columns:100px 1fr;column-gap:15px;align-items:center}.theme-preview{grid-row:1/3;min-height:112px;gap:6px;padding:8px}.preview-heading{font-size:.625rem}.preview-card{font-size:.75rem;padding:8px}.preview-steps{font-size:.625rem}.theme-option-title{margin:3px 0;align-self:end}.theme-description{margin:5px 0;align-self:start}.skin-dialog{max-width:450px}.skin-dialog .theme-options{margin-top:16px;gap:12px}[data-theme=story] .shell{padding-left:22px;padding-right:22px}[data-theme=story] .brand{margin-bottom:20px}[data-theme=story] .page-head h1{font-size:1.5rem}[data-theme=story] .page-head{margin-bottom:15px}[data-theme=story] .score-bar{margin-bottom:17px;padding-bottom:13px}[data-theme=story] .story-art{height:148px}[data-theme=story] .task-card h2{font-size:1.3rem}[data-theme=story] .task-card{padding-left:18px;padding-right:18px}[data-theme=story] .story-art{margin-left:-18px;margin-right:-18px}}
+@media(max-width:360px){[data-theme=story] .shell{padding-left:17px;padding-right:17px}[data-theme=story] .story-art{height:125px}[data-theme=story] .task-card .actions{flex-direction:row}[data-theme=story] .task-card .btn.text{font-size:.8125rem}.skin-dialog .page-head h2{font-size:1.125rem}.theme-option{grid-template-columns:90px 1fr;gap:10px}}
+@media(prefers-reduced-motion:reduce){[data-theme=story] .task-card{transition:none;animation:none}[data-theme=story] .score-pop{animation:none}}
