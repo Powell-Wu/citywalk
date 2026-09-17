@@ -1,5 +1,5 @@
-const CACHE='citywalk-static-v6';
-const FILES=['./','./index.html','./style.css','./app.mjs','./views.mjs','./core.mjs','./cards.mjs','./storage.mjs','./themes.mjs','./swipe.mjs','./story.css','./story-scene.webp','./story-talk.webp','./story-event.webp','./manifest.webmanifest','./icon-192.png','./icon-180.png','./icon-512.png','./icon-maskable.png'];
+const CACHE='citywalk-static-r-3c17d1c1ad6c';
+const FILES=['./','./app.mjs','./cards.mjs','./core.mjs','./drafts.mjs','./icon-180.png','./icon-192.png','./icon-512.png','./icon-maskable.png','./index.html','./manifest.webmanifest','./storage.mjs','./story-event.webp','./story-scene.webp','./story-talk.webp','./story.css','./style.css','./swipe.mjs','./themes.mjs','./updates.mjs','./views.mjs','./release.mjs'];
 const absolute=path=>new URL(path,self.registration.scope).href;
 self.addEventListener('install',event=>event.waitUntil((async()=>{
  const cache=await caches.open(CACHE);
@@ -7,4 +7,4 @@ self.addEventListener('install',event=>event.waitUntil((async()=>{
 })()));
 self.addEventListener('activate',event=>event.waitUntil((async()=>{for(const key of await caches.keys())if(key.startsWith('citywalk-static-')&&key!==CACHE)await caches.delete(key);await self.clients.claim();for(const client of await self.clients.matchAll())client.postMessage({type:'CACHE_READY'});})()));
 self.addEventListener('message',event=>{if(event.data?.type==='SKIP_WAITING')self.skipWaiting();if(event.data?.type==='CHECK_CACHE')event.source?.postMessage({type:'CACHE_READY'});});
-self.addEventListener('fetch',event=>{const url=new URL(event.request.url);if(event.request.method!=='GET'||url.origin!==self.location.origin)return;const paths=FILES.map(absolute);if(event.request.mode==='navigate'){event.respondWith((async()=>{const cached=await caches.match(absolute('./index.html'));return cached||fetch(event.request);})());}else if(paths.includes(url.href)){event.respondWith((async()=>{const cached=await caches.match(event.request);return cached||fetch(event.request);})());}});
+self.addEventListener('fetch',event=>{const url=new URL(event.request.url);if(event.request.method!=='GET'||url.origin!==self.location.origin)return;const paths=FILES.map(absolute);if(event.request.mode==='navigate'){event.respondWith((async()=>{const cache=await caches.open(CACHE);const cached=await cache.match(absolute('./index.html'));return cached||fetch(event.request);})());}else if(paths.includes(url.href)){event.respondWith((async()=>{const cache=await caches.open(CACHE);const cached=await cache.match(event.request);return cached||fetch(event.request);})());}});

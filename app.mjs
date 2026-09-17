@@ -3,9 +3,12 @@ import {readState,updateState} from './storage.mjs';
 import {renderView,currentSlot,dueText,timeText,esc,button,filterForm} from './views.mjs';
 import {THEMES,themeOf,setTheme,themePicker} from './themes.mjs';
 import {installCardGestures,animateCardExit} from './swipe.mjs';
+import {createUpdater} from './updates.mjs';
+import {RELEASE} from './release.mjs';
+import {saveUpdateDraft,restoreUpdateDraft,readUpdateView} from './drafts.mjs';
 const app=document.querySelector('#app');
-let state=initialState(),ready=false,busy=false,transitioning=false,updateWaiting=null;
-const ui={focusSlot:null,libraryType:'all',libraryFavorites:false,customEditor:false,offlineReady:false,storageError:'',updateWaiting:false};
+let state=initialState(),ready=false,busy=false,transitioning=false;
+const ui={focusSlot:null,libraryType:'all',libraryFavorites:false,customEditor:false,offlineReady:false,storageError:'',updateWaiting:false,updateChecking:false,updateMessage:'联网时会自动检查，也可以手动检查。'};
 const channel=typeof BroadcastChannel!=='undefined'?new BroadcastChannel('citywalk-state'):null;
 const route=()=>{const[name,id]=location.hash.slice(1).split('/');return{name:name||'home',id};};
 const go=name=>{if(location.hash===`#${name}`)render();else location.hash=name;window.scrollTo({top:0,behavior:'instant'});};
@@ -27,7 +30,7 @@ function skinsDialog(){
  d.addEventListener('click',async e=>{if(e.target.closest('[data-close]')){d.close();return;}const b=e.target.closest('[data-theme-choice]');if(!b||busy)return;try{await chooseTheme(b.dataset.themeChoice);}catch(err){toast(err.message);}});
  d.showModal();
 }
-function render(){gestures?.cancel();applyTheme();const{name,id}=route();app.innerHTML=renderView(state,ui,name,id);}
+function render(){gestures?.cancel();applyTheme();const{name,id}=route();app.innerHTML=renderView(state,ui,name,id);syncUpdateUI();}
 async function mutate(fn){if(busy)throw Error('正在保存，请稍等一下。');busy=true;try{const r=await updateState(fn);state=r.state;ui.storageError='';channel?.postMessage(state.revision);return r.result;}catch(e){if(/存储|保存|读取|中断/.test(e.message||''))ui.storageError=e.message;throw e;}finally{busy=false;}}
 function confirmBox(title,text,yes='确认'){return new Promise(resolve=>{const d=document.createElement('dialog');d.className='dialog';d.innerHTML=`<h2>${esc(title)}</h2><p>${esc(text)}</p><div class="actions"><button class="btn outline" data-choice="no">先不改</button><button class="btn" data-choice="yes">${esc(yes)}</button></div>`;document.body.append(d);let settled=false;const end=v=>{if(settled)return;settled=true;d.close();d.remove();resolve(v);};d.addEventListener('cancel',e=>{e.preventDefault();end(false);});d.addEventListener('click',e=>{const choice=e.target.closest('[data-choice]')?.dataset.choice;if(choice)end(choice==='yes');});d.showModal();});}
 function filtersDialog(){if(!state.session)return;const d=document.createElement('dialog');d.className='dialog';d.innerHTML=filterForm(state.session);document.body.append(d);d.querySelector('[data-close]').onclick=()=>d.close();d.addEventListener('close',()=>d.remove(),{once:true});d.showModal();}
@@ -82,8 +85,9 @@ case'favorite':case'disable-card':await mutate(s=>{if(!allCards(s).some(c=>c.id=
 case'export':await exportBackup();return;
 case'import':document.querySelector('#backup-file').click();return;
 case'delete-history':if(await confirmBox('删除这段回忆？','只删除当前设备的这条记录。删除后无法撤销。','删除记录')){await mutate(s=>{s.history=s.history.filter(x=>x.id!==d.id);});go('history');return;}break;
-case'check-offline':await prepareOffline();toast(ui.offlineReady?'离线内容已准备好。':'还未准备完成，请确认网络连接后再试。');break;
-case'apply-update':if(updateWaiting&&!state.session)updateWaiting.postMessage({type:'SKIP_WAITING'});return;
+case'check-offline':await updater.check(true);await checkCache();return;
+case'check-update':await updater.check(true);return;
+case'apply-update':await applyUpdate();return;
 }render();}catch(e){toast(e.message||'刚才的操作没有成功，请重试。');if(ui.storageError)render();}});
 document.addEventListener('submit',async event=>{const f=event.target;if(!['setup-form','finish-form','reward-form','card-form','filters-form'].includes(f.id))return;event.preventDefault();if(busy||transitioning||!f.reportValidity())return;const data=new FormData(f),submit=f.querySelector('[type="submit"]');submit.disabled=true;try{switch(f.id){
 case'setup-form':await mutate(s=>newSession(s,{mode:data.get('mode'),place:data.get('place'),budget:Number(data.get('budget')),scoring:data.has('scoring'),rewards:s.preferences.rewards}));ui.focusSlot=null;go('walk');break;
@@ -98,10 +102,32 @@ window.addEventListener('hashchange',()=>{if(ready)render();});
 channel?.addEventListener('message',async()=>{if(transitioning)return;try{state=await readState();applyTheme();if(!document.querySelector('dialog[open]')&&!['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName))render();else toast('记录在另一页有更新，当前输入为你保留。');}catch(e){toast(e.message);}});
 document.addEventListener('visibilitychange',async()=>{if(document.visibilityState==='visible'&&ready&&!busy&&!transitioning){try{state=await readState();applyTheme();if(['walk','home','history','detail'].includes(route().name))render();}catch(e){toast(e.message);}}});
 setInterval(()=>{const se=state.session;if(!se||route().name!=='walk')return;const clock=document.querySelector('[data-elapsed]');if(clock)clock.textContent=timeText(elapsed(se));const due=document.querySelector('[data-due]');if(due)due.textContent=dueText(se,currentSlot(se,ui.focusSlot));},15000);
-async function checkCache(){try{if(!('caches' in window))return;ui.offlineReady=!!await caches.match(new URL('./offline-ready',document.baseURI).href);document.querySelectorAll('[data-offline]').forEach(el=>el.textContent=ui.offlineReady?'✓ 离线内容已准备好':'离线尚未准备好，请联网打开并等待片刻。');}catch{ui.offlineReady=false;}}
-async function prepareOffline(){if(!('serviceWorker' in navigator)||!window.isSecureContext)return;try{const reg=await navigator.serviceWorker.register('./sw.js',{scope:'./',updateViaCache:'none'});updateWaiting=reg.waiting;ui.updateWaiting=!!reg.waiting;reg.addEventListener('updatefound',()=>{reg.installing?.addEventListener('statechange',()=>{if(reg.waiting){updateWaiting=reg.waiting;ui.updateWaiting=true;if(!state.session)toast('有新版本，下次空闲时可在设置中更新。');}checkCache();});});await checkCache();reg.active?.postMessage({type:'CHECK_CACHE'});}catch{ui.offlineReady=false;}}
-let refreshing=false;navigator.serviceWorker?.addEventListener('controllerchange',()=>{checkCache();if(updateWaiting&&!state.session&&!refreshing){refreshing=true;location.reload();}});navigator.serviceWorker?.addEventListener('message',e=>{if(e.data?.type==='CACHE_READY')checkCache();});
+const draftContext=()=>({hash:location.hash,session:state.session?.id||null,card:currentSlot(state.session||{slots:[]},ui.focusSlot)?.card?.id||null,revision:state.revision});
+function syncUpdateUI(){
+ document.querySelectorAll('[data-update-status]').forEach(el=>el.textContent=ui.updateMessage);
+ document.querySelectorAll('[data-current-version]').forEach(el=>el.textContent=RELEASE);
+ document.querySelectorAll('[data-action="check-update"]').forEach(el=>{el.disabled=ui.updateChecking;el.textContent=ui.updateChecking?'正在检查…':'检查更新';});
+ document.querySelectorAll('[data-action="apply-update"],[data-update-banner]').forEach(el=>el.classList.toggle('hidden',!ui.updateWaiting));
+}
+async function applyUpdate(){
+ if(busy||transitioning)return;
+ try{
+  // Preserve unsaved text locally before the user-requested reload.
+  try{saveUpdateDraft(document,sessionStorage,draftContext(),ui);}
+  catch{if(!await confirmBox('更新前先保存文字','当前浏览器无法暂存输入。散步记录不会丢失，但尚未保存的文字会在刷新后清空。','仍然刷新'))return;}
+  await updater.apply();
+ }catch(e){toast(e.message||'更新暂未完成，请重试。');}
+}
+const updater=createUpdater({serviceWorker:navigator.serviceWorker,secure:window.isSecureContext,onChange:s=>{
+ ui.updateWaiting=s.available;ui.updateChecking=s.checking;ui.updateMessage=s.message;syncUpdateUI();
+},reload:()=>location.reload()});
+async function checkCache(){try{if(!('caches' in window))return;const cache=await caches.open('citywalk-static-'+RELEASE);ui.offlineReady=!!await cache.match(new URL('./offline-ready',document.baseURI).href);document.querySelectorAll('[data-offline]').forEach(el=>el.textContent=ui.offlineReady?'✓ 离线内容已准备好':'离线尚未准备好，请联网打开并等待片刻。');}catch{ui.offlineReady=false;}}
+async function prepareOffline(){await updater.check();await checkCache();}
+navigator.serviceWorker?.addEventListener('message',e=>{if(e.data?.type==='CACHE_READY')checkCache();});
+window.addEventListener('online',()=>updater.check());
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&ready)updater.check();});
+setInterval(()=>{if(document.visibilityState==='visible')updater.check();},15*60*1000);
 let registered=false;
 function registerAgentTools(){const ctx=document.modelContext;if(!ctx?.registerTool||registered)return;registered=true;const lifecycle=new AbortController();window.addEventListener('pagehide',()=>lifecycle.abort(),{once:true});const list=[{name:'read_citywalk_state',description:'Read the current shared-phone walk, score and current card without altering records.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:true},execute(input={}){if(Object.keys(input).length)throw Error('No arguments accepted');const se=state.session;return se?{id:se.id,mode:se.mode,score:score(se),paused:!!se.pausedAt,current:currentSlot(se,ui.focusSlot)}:{active:false,historyCount:state.history.length};}},{name:'draw_citywalk_card',description:'Draw a card in the active walk using the same filters and deduplication as the interface. Does not mark it complete.',inputSchema:{type:'object',properties:{type:{type:'string',enum:['scene','talk','event']}},additionalProperties:false},annotations:{readOnlyHint:false,untrustedContentHint:true},async execute(input={}){if(transitioning)throw Error('Wait for the current card');if(Object.keys(input).some(k=>k!=='type')||(input.type&&!TYPES[input.type]))throw Error('Invalid card type');if(!state.session)throw Error('Start a walk in the interface first');const se=state.session,x=currentSlot(se,ui.focusSlot);if(x&&x.status!=='waiting')throw Error('Current card must be finished or skipped first');if(!x&&!input.type)throw Error('Choose a card type');ui.focusSlot=await mutate(s=>draw(s,se.id,x?.id,input.type));go('walk');render();return{card:state.session.slots.find(x=>x.id===ui.focusSlot).card};}}];for(const tool of list){try{Promise.resolve(ctx.registerTool(tool,{signal:lifecycle.signal})).catch(()=>{});}catch{}}}
-async function boot(){try{state=await readState();ready=true;ui.storageError='';render();registerAgentTools();prepareOffline();}catch(e){ready=false;ui.storageError=e.message;app.innerHTML=`<div class="shell"><div class="panel"><h1>先把回忆安顿好</h1><p>${esc(e.message)}</p><p>为避免记录丢失，暂时没有开始新一局。请使用普通浏览窗口，检查网站存储权限后重试。</p>${button('重新打开','reload','','block')}</div></div>`;}}
+async function boot(){try{state=await readState();ready=true;ui.storageError='';try{Object.assign(ui,readUpdateView(sessionStorage));}catch{}render();try{restoreUpdateDraft(document,sessionStorage,draftContext());}catch{}registerAgentTools();prepareOffline();}catch(e){ready=false;ui.storageError=e.message;app.innerHTML=`<div class="shell"><div class="panel"><h1>先把回忆安顿好</h1><p>${esc(e.message)}</p><p>为避免记录丢失，暂时没有开始新一局。请使用普通浏览窗口，检查网站存储权限后重试。</p>${button('重新打开','reload','','block')}</div></div>`;}}
 await boot();
