@@ -1,4 +1,4 @@
-const CACHE='citywalk-static-v4';
+const CACHE='citywalk-static-v6';
 const FILES=['./','./index.html','./style.css','./app.mjs','./views.mjs','./core.mjs','./cards.mjs','./storage.mjs','./themes.mjs','./swipe.mjs','./story.css','./story-scene.webp','./story-talk.webp','./story-event.webp','./manifest.webmanifest','./icon-192.png','./icon-180.png','./icon-512.png','./icon-maskable.png'];
 const absolute=path=>new URL(path,self.registration.scope).href;
 self.addEventListener('install',event=>event.waitUntil((async()=>{

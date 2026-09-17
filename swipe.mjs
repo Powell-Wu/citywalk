@@ -28,6 +28,8 @@ export function installCardGestures(root, {enabled, commit}) {
     if(!g.axis&&Math.max(Math.abs(g.dx),Math.abs(g.dy))>9){
       if(Math.abs(g.dy)>=Math.abs(g.dx)){cancel();return;}
       g.axis='x';g.card.setPointerCapture(e.pointerId);g.card.classList.add('is-dragging');
+      // The deal-in animation must not keep the card pinned while it is dragged.
+      g.card.classList.remove('card-enter');
     }
     if(g.axis!=='x')return;
     e.preventDefault();
@@ -50,7 +52,11 @@ export function installCardGestures(root, {enabled, commit}) {
     else reset(g.card);
   });
   root.addEventListener('pointercancel',cancel);
-  root.addEventListener('lostpointercapture',()=>{if(gesture)cancel();});
+  // A touch pointer is implicitly captured to the element under the finger, so
+  // setPointerCapture on the card hands capture over and fires a bubbling
+  // lostpointercapture from that child. Only losing the card's own capture
+  // means the gesture is really gone.
+  root.addEventListener('lostpointercapture',e=>{if(gesture&&e.target===gesture.card)cancel();});
   root.addEventListener('click',e=>{if(Date.now()<suppressClickUntil){e.preventDefault();e.stopImmediatePropagation();}},{capture:true});
   window.addEventListener('blur',cancel);
   window.addEventListener('hashchange',cancel);

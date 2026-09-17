@@ -63,7 +63,7 @@
 [data-theme=story] .task-card:not(.swipe-ready) .swipe-choice span{visibility:hidden}
 [data-theme=story] .swipe-guide{text-align:center;font-size:.8125rem;color:#ebd4a4;margin:0 0 3px;letter-spacing:.05em}
 [data-theme=story] .deck-count{text-align:center;font-size:.75rem;color:var(--muted);margin:0}
-[data-theme=story] .card-enter{animation:deal-card 300ms cubic-bezier(.2,.75,.25,1) both}
+[data-theme=story] .card-enter{animation:deal-card 300ms cubic-bezier(.2,.75,.25,1) backwards}
 [data-theme=story] .score-pop{animation:score-pop 350ms ease-out}
 @keyframes deal-card{from{opacity:0;transform:translateY(16px) scale(.95) rotate(-2deg)}to{opacity:1;transform:translateY(0) scale(1) rotate(0)}}
 @keyframes score-pop{50%{transform:scale(1.13);color:#fff0b8}}
