@@ -5,14 +5,16 @@ import {THEMES,themeOf,setTheme,themePicker} from './themes.mjs';
 import {installCardGestures,animateCardExit} from './swipe.mjs';
 import {createUpdater} from './updates.mjs';
 import {RELEASE} from './release.mjs';
+import {showCompletion} from './rewards.mjs';
 import {saveUpdateDraft,restoreUpdateDraft,readUpdateView} from './drafts.mjs';
 const app=document.querySelector('#app');
 let state=initialState(),ready=false,busy=false,transitioning=false;
 const ui={focusSlot:null,libraryType:'all',libraryFavorites:false,customEditor:false,offlineReady:false,storageError:'',updateWaiting:false,updateChecking:false,updateMessage:'联网时会自动检查，也可以手动检查。'};
+try{ui.swipeSeen=localStorage.getItem('citywalk-swipe-seen')==='1';}catch{}
 const channel=typeof BroadcastChannel!=='undefined'?new BroadcastChannel('citywalk-state'):null;
 const route=()=>{const[name,id]=location.hash.slice(1).split('/');return{name:name||'home',id};};
 const go=name=>{if(location.hash===`#${name}`)render();else location.hash=name;window.scrollTo({top:0,behavior:'instant'});};
-function toast(text){const el=document.querySelector('#toast');el.textContent=text;el.classList.add('visible');clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.classList.remove('visible'),4200);}
+function toast(text){const el=document.querySelector('#toast');el.textContent=text;el.classList.remove('completion-feedback');el.classList.add('visible');clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.classList.remove('visible'),4200);}
 function applyTheme(){
  const theme=themeOf(state);
  gestures?.cancel();
@@ -25,9 +27,9 @@ function applyTheme(){
 async function chooseTheme(theme){await mutate(s=>setTheme(s,theme));applyTheme();}
 function skinsDialog(){
  const d=document.createElement('dialog');d.className='dialog skin-dialog';d.setAttribute('aria-labelledby','skin-title');
- d.innerHTML=`<div class="page-head"><h2 id="skin-title">给今天换个心情</h2><button type="button" class="btn text" data-close>完成</button></div><p class="help">随时切换，散步进度和当前输入都会保留。</p>${themePicker(state)}`;
+ d.innerHTML=`<div class="page-head"><h2 id="skin-title">主题</h2><button type="button" class="btn text" data-close>完成</button></div>${themePicker(state)}`;
  document.body.append(d);d.addEventListener('close',()=>d.remove(),{once:true});
- d.addEventListener('click',async e=>{if(e.target.closest('[data-close]')){d.close();return;}const b=e.target.closest('[data-theme-choice]');if(!b||busy)return;try{await chooseTheme(b.dataset.themeChoice);}catch(err){toast(err.message);}});
+ d.addEventListener('click',async e=>{if(e.target.closest('[data-close]')){d.close();return;}const b=e.target.closest('[data-theme-choice]');if(!b||b.disabled||busy)return;try{await chooseTheme(b.dataset.themeChoice);}catch(err){toast(err.message);}});
  d.showModal();
 }
 function render(){gestures?.cancel();applyTheme();const{name,id}=route();app.innerHTML=renderView(state,ui,name,id);syncUpdateUI();}
@@ -35,31 +37,35 @@ async function mutate(fn){if(busy)throw Error('正在保存，请稍等一下。
 function confirmBox(title,text,yes='确认'){return new Promise(resolve=>{const d=document.createElement('dialog');d.className='dialog';d.innerHTML=`<h2>${esc(title)}</h2><p>${esc(text)}</p><div class="actions"><button class="btn outline" data-choice="no">先不改</button><button class="btn" data-choice="yes">${esc(yes)}</button></div>`;document.body.append(d);let settled=false;const end=v=>{if(settled)return;settled=true;d.close();d.remove();resolve(v);};d.addEventListener('cancel',e=>{e.preventDefault();end(false);});d.addEventListener('click',e=>{const choice=e.target.closest('[data-choice]')?.dataset.choice;if(choice)end(choice==='yes');});d.showModal();});}
 function filtersDialog(){if(!state.session)return;const d=document.createElement('dialog');d.className='dialog';d.innerHTML=filterForm(state.session);document.body.append(d);d.querySelector('[data-close]').onclick=()=>d.close();d.addEventListener('close',()=>d.remove(),{once:true});d.showModal();}
 const gestures=installCardGestures(app,{
- enabled:()=>ready&&!busy&&!transitioning&&themeOf(state)==='story'&&!state.session?.pausedAt&&!document.querySelector('dialog[open]'),
- commit:performCardAction
+ enabled:()=>ready&&!busy&&!transitioning&&themeOf(state)==='adventure'&&!state.session?.pausedAt&&!document.querySelector('dialog[open]'),
+ commit:async(action,data)=>{const ok=await performCardAction(action,data);if(ok){ui.swipeSeen=true;try{localStorage.setItem('citywalk-swipe-seen','1');}catch{}app.querySelector('.swipe-guide')?.remove();}return ok;}
 });
 async function performCardAction(action,d){
  if(busy||transitioning)return false;
  const input=document.querySelector('#actual-cost');
  if(action==='complete'&&input&&!input.reportValidity())return false;
  const oldCard=app.querySelector('.task-card');
- const story=themeOf(state)==='story';
+ const animated=themeOf(state)==='adventure';
  const before=state.session?score(state.session).total:0;
  const previousFocus=document.activeElement;
  const restoreFocus=oldCard?.contains(previousFocus);
  let exitAnimation;
  transitioning=true;
  try{
-  await mutate(s=>action==='replace'?replaceCard(s,d.session,d.slot,d.card):complete(s,d.session,d.slot,d.card,input?Number(input.value):0));
+  const changed=await mutate(s=>action==='replace'?replaceCard(s,d.session,d.slot,d.card):complete(s,d.session,d.slot,d.card,input?Number(input.value):0));
+  if(action==='complete'&&!changed)return false;
   if(action==='complete')ui.focusSlot=null;
   // Persist first. A failed save must never animate a successful decision.
-  if(story)exitAnimation=await animateCardExit(oldCard,action);
+  if(animated)exitAnimation=await animateCardExit(oldCard,action);
+  if(animated&&action==='complete')await showCompletion({points:score(state.session).total-before,scoring:state.session.scoring});
   // A successful write remains successful even if a subsequent refresh cannot read.
   try{state=await readState();}catch{}
   render();
-  if(story){app.querySelector('.task-card')?.classList.add('card-enter');if(state.session&&score(state.session).total>before)app.querySelector('.score-value')?.classList.add('score-pop');}
+  if(animated){app.querySelector('.task-card')?.classList.add('card-enter');if(state.session&&score(state.session).total>before)app.querySelector('.score-value')?.classList.add('score-pop');}
   if(restoreFocus){const next=app.querySelector('.task-card h2')||app.querySelector('main h1');next?.setAttribute('tabindex','-1');next?.focus({preventScroll:true});}
-  toast(action==='replace'?'换一张，看看下个故事。':'这件小事，记下了。');
+  const gained=state.session?score(state.session).total-before:0;
+  if(action==='replace')toast('已换卡');
+  else if(!animated)toast(gained>0?`任务完成 · +${gained} 分`:'任务完成');
   return true;
  }catch(e){toast(e.message||'刚才的操作没有成功，请重试。');return false;}
  finally{exitAnimation?.cancel();transitioning=false;}
@@ -69,9 +75,9 @@ case'skins':skinsDialog();return;
 case'set-theme':await chooseTheme(d.themeChoice);return;
 case'nav':go(d.route);return;
 case'reload':await boot();return;
-case'draw':ui.focusSlot=await mutate(s=>draw(s,d.session,d.slot,d.type));render();if(themeOf(state)==='story')app.querySelector('.task-card')?.classList.add('card-enter');return;
+case'draw':ui.focusSlot=await mutate(s=>draw(s,d.session,d.slot,d.type));render();if(themeOf(state)==='adventure')app.querySelector('.task-card')?.classList.add('card-enter');return;
 case'replace':case'complete':await performCardAction(d.action,d);return;
-case'later':await mutate(s=>setSlotStatus(s,d.session,d.slot,'later'));ui.focusSlot=null;toast('留到稍后，随时回来做。');break;
+case'later':await mutate(s=>setSlotStatus(s,d.session,d.slot,'later'));ui.focusSlot=null;toast('已移到稍后');break;
 case'skip':await mutate(s=>setSlotStatus(s,d.session,d.slot,'skipped'));ui.focusSlot=null;break;
 case'pause':await mutate(s=>togglePause(s,d.session));break;
 case'focus':ui.focusSlot=d.slot;break;
@@ -91,10 +97,10 @@ case'apply-update':await applyUpdate();return;
 }render();}catch(e){toast(e.message||'刚才的操作没有成功，请重试。');if(ui.storageError)render();}});
 document.addEventListener('submit',async event=>{const f=event.target;if(!['setup-form','finish-form','reward-form','card-form','filters-form'].includes(f.id))return;event.preventDefault();if(busy||transitioning||!f.reportValidity())return;const data=new FormData(f),submit=f.querySelector('[type="submit"]');submit.disabled=true;try{switch(f.id){
 case'setup-form':await mutate(s=>newSession(s,{mode:data.get('mode'),place:data.get('place'),budget:Number(data.get('budget')),scoring:data.has('scoring'),rewards:s.preferences.rewards}));ui.focusSlot=null;go('walk');break;
-case'finish-form':{const id=await mutate(s=>finish(s,f.dataset.session,{name:data.get('name'),memory:data.get('memory'),closing:data.has('closing')}));go(`detail/${id}`);toast('今天的回忆，已经收好了。');break;}
-case'reward-form':await mutate(s=>{s.preferences.rewards=[0,1,2].map(i=>String(data.get(`reward${i}`)).trim().slice(0,80)||REWARDS[i]);});toast('奖励已保存，下次出发就用它。');break;
-case'card-form':{const card={id:'custom-'+uid(),type:data.get('type'),text:String(data.get('text')).trim(),note:String(data.get('note')).trim(),minutes:Number(data.get('minutes')),cost:Number(data.get('cost')),place:data.get('place'),source:'custom'};validateCustomCard(card);await mutate(s=>{if(s.customCards.length>=500)throw Error('自定义卡片已达到500张上限。');s.customCards.push(card);});ui.customEditor=false;ui.libraryType='all';ui.libraryFavorites=false;toast('你的卡片，已经放进盒子里。');break;}
-case'filters-form':await mutate(s=>{const se=activeSession(s,f.dataset.session);const budget=Number(data.get('budget')),place=data.get('place');if(!Number.isFinite(budget)||budget<0||budget>10000||!['both','indoor','outdoor'].includes(place))throw Error('请检查预算和场景。');se.budget=budget;se.place=place;});f.closest('dialog').close();toast('后面的抽卡会按新设置进行。');break;
+case'finish-form':{const id=await mutate(s=>finish(s,f.dataset.session,{name:data.get('name'),memory:data.get('memory'),closing:data.has('closing')}));go(`detail/${id}`);toast('记录已保存');break;}
+case'reward-form':await mutate(s=>{s.preferences.rewards=[0,1,2].map(i=>String(data.get(`reward${i}`)).trim().slice(0,80)||REWARDS[i]);});toast('奖励已保存，下局生效');break;
+case'card-form':{const card={id:'custom-'+uid(),type:data.get('type'),text:String(data.get('text')).trim(),note:String(data.get('note')).trim(),minutes:Number(data.get('minutes')),cost:Number(data.get('cost')),place:data.get('place'),source:'custom'};validateCustomCard(card);await mutate(s=>{if(s.customCards.length>=500)throw Error('自定义卡片已达到500张上限。');s.customCards.push(card);});ui.customEditor=false;ui.libraryType='all';ui.libraryFavorites=false;toast('卡片已添加');break;}
+case'filters-form':await mutate(s=>{const se=activeSession(s,f.dataset.session);const budget=Number(data.get('budget')),place=data.get('place');if(!Number.isFinite(budget)||budget<0||budget>10000||!['both','indoor','outdoor'].includes(place))throw Error('请检查预算和场景。');se.budget=budget;se.place=place;});f.closest('dialog').close();toast('筛选已更新');break;
 }render();}catch(e){toast(e.message||'保存失败，请重试。');if(ui.storageError){const p=document.createElement('p');p.className='storage-error';p.textContent=ui.storageError;f.prepend(p);}}finally{submit.disabled=false;}});
 async function exportBackup(){const latest=await readState();const blob=new Blob([JSON.stringify(latest,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`一起走走-备份-${new Date().toISOString().slice(0,10)}.json`;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);toast('备份已生成，请在下载文件中确认保存。');}
 app.addEventListener('change',async e=>{if(e.target.id!=='backup-file')return;const file=e.target.files[0];if(!file)return;try{if(file.size>5*1024*1024)throw Error('备份文件超过5MB，请选择有效的文字备份。');let raw;try{raw=JSON.parse(await file.text());}catch{throw Error('文件不是有效的JSON备份。');}const clean=validateBackup(raw);if(!await confirmBox('用备份替换本机记录？',`备份有 ${clean.history.length} 段历史、${clean.customCards.length} 张自定义卡${clean.session?'和一局进行中的散步':''}。当前记录将被替换。`,'导入并替换'))return;await mutate(s=>{const revision=s.revision;Object.assign(s,clean,{revision});});ui.focusSlot=null;render();toast('备份已恢复到这部设备。');}catch(e){toast(e.message);}finally{e.target.value='';}});

@@ -1,13 +1,16 @@
 export const THEMES = Object.freeze({
-  warm: { name: '暖日散步', description: '奶油色卡片，把小事慢慢收好。', color: '#f7f2e9' },
-  adventure: { name: '双人冒险', description: '深色任务面板，和队友探索城市。', color: '#151e25' },
-  story: { name: '叙事卡牌', description: '翻开城市故事，向左换卡、向右完成。', color: '#292c29' }
+  adventure: { name: '双人冒险', description: '城市探索', color: '#fff8e9' },
+  warm: { name: '暖日散步', description: '暂未开放', color: '#f7f2e9', locked: true }
 });
-export const themeOf = state => Object.hasOwn(THEMES, state.theme) ? state.theme : 'warm';
+export const themeOf = () => 'adventure';
 export function setTheme(state, theme) {
-  if (!Object.hasOwn(THEMES, theme)) throw Error('这款皮肤暂时不可用。');
+  if(theme !== 'adventure') throw Error('这款皮肤暂时不可用。');
   state.theme = theme;
 }
-export function themePicker(state) {
-  return `<div class="theme-options" role="group" aria-label="选择界面皮肤">${Object.entries(THEMES).map(([id, theme]) => `<button type="button" class="theme-option" data-action="set-theme" data-theme-choice="${id}" aria-pressed="${themeOf(state) === id}"><span class="theme-preview preview-${id}" aria-hidden="true"><span class="preview-heading">${id === 'warm' ? '一起走走' : id === 'story' ? '城市故事 / 01' : 'QUEST / 02'}</span><span class="preview-card">${id === 'warm' ? '发现一件小事' : id === 'story' ? '下一张，遇见你' : '开启城市任务'}<span class="preview-bar"></span></span><span class="preview-steps">${id === 'warm' ? '● ○ ○ ○' : '◆ ◇ ◇ ◇'}</span></span><span class="theme-option-title">${theme.name}<span class="theme-selected" data-theme-status="${id}">${themeOf(state) === id ? '使用中' : '选择'}</span></span><span class="theme-description">${theme.description}</span></button>`).join('')}</div>`;
+export function restoreTheme(state, theme) {
+  if(theme !== undefined && !['adventure','warm','story'].includes(theme)) throw Error('备份的皮肤设置无效。');
+  state.theme = 'adventure';
+}
+export function themePicker() {
+  return `<div class="theme-options" role="group" aria-label="主题"><button type="button" class="theme-option" aria-pressed="true" data-action="set-theme" data-theme-choice="adventure"><span class="theme-option-title">双人冒险 <span class="theme-selected">使用中</span></span></button><button type="button" class="theme-option" disabled aria-disabled="true"><span class="theme-option-title">暖日散步</span><span class="theme-description">暂未开放</span></button></div>`;
 }

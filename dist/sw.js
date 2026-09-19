@@ -1,5 +1,5 @@
-const CACHE='citywalk-static-r-3c17d1c1ad6c';
-const FILES=['./','./app.mjs','./cards.mjs','./core.mjs','./drafts.mjs','./icon-180.png','./icon-192.png','./icon-512.png','./icon-maskable.png','./index.html','./manifest.webmanifest','./storage.mjs','./story-event.webp','./story-scene.webp','./story-talk.webp','./story.css','./style.css','./swipe.mjs','./themes.mjs','./updates.mjs','./views.mjs','./release.mjs'];
+const CACHE='citywalk-static-r-4607b0d43ad9';
+const FILES=['./','./app.mjs','./art-challenge.webp','./art-discover.webp','./art-explore.webp','./art-shop.webp','./art-talk.webp','./art-track.webp','./art.mjs','./card-back.webp','./cards.css','./cards.mjs','./chest-closed.webp','./chest-open.webp','./core.mjs','./drafts.mjs','./explorer-badge.webp','./icon-180.png','./icon-192.png','./icon-512.png','./icon-maskable.png','./index.html','./journey-departure.webp','./journey-keepsake.webp','./journey-view.mjs','./manifest.webmanifest','./pixel.css','./rewards.mjs','./storage.mjs','./story-event.webp','./story-scene.webp','./story-talk.webp','./style.css','./swipe.mjs','./task-view.mjs','./themes.mjs','./updates.mjs','./views.mjs','./release.mjs'];
 const absolute=path=>new URL(path,self.registration.scope).href;
 self.addEventListener('install',event=>event.waitUntil((async()=>{
  const cache=await caches.open(CACHE);

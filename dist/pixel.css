@@ -1,0 +1,135 @@
+/* Bright urban pixel theme; artwork is decorative, body text stays readable. */
+:root[data-theme=adventure]{color-scheme:light;--paper:#fff8e9;--white:#fffdf5;--ink:#17354d;--muted:#566674;--line:#b7c6c9;--accent:#285d89;--soft:#e8eef0;--green:#376f62;--blue:#366b91;--radius:6px}
+[data-theme=adventure] body{background:var(--paper)}
+[data-theme=adventure] .brand{border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:24px}
+[data-theme=adventure] .brand-mark{background:var(--accent);color:var(--white);border:0;box-shadow:2px 2px #b3c4c8}
+[data-theme=adventure] .ticket,[data-theme=adventure] .panel{border:1px solid var(--line);box-shadow:3px 3px 0 #17354d14}
+[data-theme=adventure] .btn{color:#fffdf5;border:1px solid var(--accent);box-shadow:0 3px 0 #17354d;border-radius:3px}
+[data-theme=adventure] .btn.secondary{background:var(--soft);color:var(--ink);border-color:var(--line);box-shadow:0 2px 0 #b7c6c9}
+[data-theme=adventure] .btn.outline{background:var(--white);border-color:var(--ink);color:var(--ink);box-shadow:0 2px 0 #b7c6c9}
+[data-theme=adventure] .btn.text{background:transparent;border-color:transparent;color:var(--muted);box-shadow:none}
+[data-theme=adventure] .btn.danger{background:#f7ddd4;color:#8c3526;border-color:#c9998a}
+[data-theme=adventure] input,[data-theme=adventure] select,[data-theme=adventure] textarea{background:var(--white)}
+[data-theme=adventure] input::placeholder,[data-theme=adventure] textarea::placeholder{color:#687b83}
+[data-theme=adventure] .tag{background:#e7f0e7;color:var(--green)}
+[data-theme=adventure] .tag.talk{background:#e5eef5;color:var(--blue)}
+[data-theme=adventure] .tag.event{background:#fae9da;color:#975036}
+[data-theme=adventure] .nav{background:#fff8e9f5}
+[data-theme=adventure] .score-bar{background:var(--white);padding:12px;border-color:var(--line)}
+[data-theme=adventure] .step{background:#e4e9e7;color:var(--muted)}
+[data-theme=adventure] .step.done{color:white;background:var(--green)}
+[data-theme=adventure] .hero-num{color:#9bb5bd}
+[data-theme=adventure] .dialog::backdrop{background:#17354d66}
+[data-theme=adventure] #toast{background:var(--ink);color:var(--white)}
+[data-theme=adventure] #toast.completion-feedback{background:#e7f0e7;color:#245444;border-color:#649581}
+.card-stage{--left-choice:0;--right-choice:0;max-width:440px;padding:8px 0 0}
+.card-back{inset:16px 8px 82px;background:#fff8e9 url('./card-back.webp') center/cover;border:2px solid var(--ink);border-radius:5px}
+[data-theme=adventure] .task-card{padding:10px;margin-bottom:12px;min-height:0;border:2px solid var(--ink);border-top:2px solid var(--ink);border-radius:6px;box-shadow:4px 5px 0 #17354d18;background:var(--white);z-index:1}
+.card-heading{padding:3px 4px 10px}
+.card-heading .tag{border:0;background:transparent;padding:3px 0;font-weight:700}
+.task-art{display:block;width:100%;height:auto;aspect-ratio:3/4;object-fit:contain;image-rendering:pixelated;border-radius:2px;pointer-events:none}
+.shell[data-page=walk] .task-art{height:clamp(220px,36svh,340px);aspect-ratio:auto;background:#e9f0ed}
+.shell[data-page=walk] .brand{margin-bottom:12px;padding-bottom:10px}
+.shell[data-page=walk] .page-head{margin-bottom:10px}
+.shell[data-page=walk] .page-head .eyebrow{margin-bottom:2px;font-size:.75rem}
+.shell[data-page=walk] .page-head h1{font-size:1.35rem}
+.shell[data-page=walk] .score-bar{padding:8px 10px;margin-bottom:10px}
+.shell[data-page=walk] .score-value{font-size:1.5rem}
+.task-copy{padding:0 8px 8px}
+[data-theme=adventure] .task-card h2{font-size:clamp(1.15rem,5vw,1.45rem);line-height:1.45;margin:16px 0 10px}
+.task-note{font-size:.9375rem;line-height:1.6;margin:0 0 10px;color:var(--ink)}
+.task-meta{font-size:.8125rem;gap:12px;margin-bottom:0}
+.card-options{margin-top:8px;font-size:.8125rem}
+.card-options summary{color:var(--muted);font-weight:400;text-align:right}
+.card-options .actions{padding:8px 0;gap:8px}
+.draw-card-art{display:flex;justify-content:center;padding:10px;background:var(--paper)}
+.draw-card-art img{display:block;width:65%;height:auto;max-height:340px;object-fit:contain;image-rendering:pixelated}
+.swipe-reveal{position:absolute;top:15%;bottom:20%;width:48%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;border:2px solid currentColor;border-radius:5px;font-size:2rem;pointer-events:none;z-index:0}
+.swipe-reveal strong{font-size:1.2rem}.swipe-reveal span{font-size:.8125rem;visibility:hidden}
+.reveal-left{right:0;background:#fae9da;color:#8d4e32;opacity:var(--left-choice)}
+.reveal-right{left:0;background:#dfefe4;color:#285d49;opacity:var(--right-choice)}
+.card-stage.swipe-ready .swipe-reveal{border-width:4px}.card-stage.swipe-ready .swipe-reveal span{visibility:visible}
+.reward-dialog{border:2px solid #285269;border-radius:6px;background:#fff8e9;color:var(--ink);width:min(340px,calc(100% - 32px));padding:12px 20px 18px;text-align:center;box-shadow:5px 5px 0 #17354d33}
+.reward-dialog::backdrop{background:#17354d66}.reward-dialog h2{margin:0 0 4px}.reward-dialog p{margin:0 0 6px;font-weight:700;color:var(--accent)}
+.reward-scene{position:relative;width:240px;max-width:100%;aspect-ratio:1;margin:auto}
+.chest{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated}
+.chest-open{opacity:0}.loot-badge{position:absolute;left:35%;top:8%;width:30%;height:auto;opacity:0;image-rendering:pixelated}
+.loot-spark{position:absolute;color:#ba8930;font-style:normal;opacity:0;font-size:24px;top:28%}.s1{left:20%}.s2{right:14%;top:15%}
+.reward-playing .chest-closed{animation:chest-close-frame 1.4s steps(1,end) forwards}
+.reward-playing .chest-open{animation:chest-open-frame 1.4s steps(1,end) forwards}
+.reward-playing .loot-badge{animation:loot-rise 1.4s ease-out forwards}
+.reward-playing .loot-spark{animation:loot-spark 1.4s ease-out forwards}
+.reward-still .chest-closed{opacity:0}.reward-still .chest-open,.reward-still .loot-badge{opacity:1}
+@keyframes chest-close-frame{0%,28%{opacity:1}29%,100%{opacity:0}}
+@keyframes chest-open-frame{0%,28%{opacity:0}29%,100%{opacity:1}}
+@keyframes loot-rise{0%,35%{opacity:0;transform:translateY(50px) scale(.6)}65%,100%{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes loot-spark{0%,40%{opacity:0;transform:scale(.5)}65%{opacity:1;transform:scale(1)}100%{opacity:0;transform:translateY(-18px)}}
+@media(max-width:700px){.shell{padding-left:16px;padding-right:16px}.page-head{margin-bottom:14px}.score-bar{margin-bottom:14px}.brand{margin-bottom:16px}.card-heading .small{font-size:.8rem}}
+@media(prefers-reduced-motion:reduce){.card-stage:has(.task-card.is-dragging) .swipe-reveal{z-index:3;top:12%;bottom:auto;padding:16px;width:auto;min-width:42%}.reward-playing .chest-closed{opacity:0}.reward-playing .chest-open,.reward-playing .loot-badge{opacity:1}}
+
+/* Departure pass and saved journey share the task deck's paper and pixel art. */
+.departure-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:28px;align-items:center}
+.departure-grid>*{min-width:0}
+.departure-scene{border:1px solid var(--line);border-radius:5px;background:var(--white);overflow:hidden}
+.departure-heading{padding:24px 24px 0}
+.departure-heading .eyebrow{margin-bottom:8px}
+.departure-heading h1{font-size:clamp(1.8rem,4vw,2.5rem);margin:0 0 18px}
+.journey-art{display:block;width:100%;height:auto;aspect-ratio:3/2;object-fit:contain;image-rendering:pixelated;background:#e5efea}
+.departure-caption{margin:0;padding:12px 20px;font-size:.875rem;color:var(--muted);border-top:1px solid var(--line)}
+.adventure-pass{padding:24px}
+.adventure-pass .ticket-top{margin-bottom:18px;padding-bottom:14px;gap:10px}
+.pass-heading,.record-heading{display:flex;gap:12px;align-items:center}
+.pass-heading>div,.record-heading>div{min-width:0}
+.journey-badge{width:64px;height:64px;object-fit:contain;image-rendering:pixelated;flex:none}
+.pass-heading .eyebrow,.record-heading .eyebrow{font-size:.75rem;margin-bottom:4px}
+.pass-heading h2{font-size:1.25rem;margin:0;line-height:1.5}
+.pass-note{color:var(--muted);margin:18px 0}
+.pass-progress{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:12px 0;margin-bottom:16px;border-top:1px dashed var(--line);border-bottom:1px dashed var(--line);font-size:.875rem}
+.pass-stops{display:flex;flex-wrap:wrap;gap:6px 14px;margin:16px 0 24px;font-size:.8125rem;color:var(--muted)}
+.pass-stops span::before{content:"";display:inline-block;width:6px;height:6px;background:var(--green);margin-right:6px;box-shadow:2px 2px #17354d22}
+.pass-stops span:nth-child(2)::before{background:var(--blue)}
+.pass-stops span:nth-child(3)::before{background:#b77d3f}
+.adventure-pass .footnote{margin:14px 0 0;text-align:center}
+.last-journey{margin:20px 0 12px;padding:0 4px;border-left:3px solid var(--line)}
+.last-journey p{margin:4px 12px;overflow-wrap:anywhere}
+.last-journey>span{margin-left:12px}
+.last-journey .btn{min-height:36px;padding:4px 12px;font-size:.875rem}
+.departure-pass .status-line{font-size:.75rem;margin-top:16px}
+.closing-intro{overflow:hidden;border:1px solid var(--line);background:var(--white);border-radius:5px;margin-bottom:18px}
+.closing-intro .journey-art{max-height:280px}
+.closing-intro-copy{padding:20px}
+.closing-intro-copy .eyebrow{font-size:.75rem;margin-bottom:8px}
+.closing-intro-copy h2{margin-bottom:10px}
+.closing-intro-copy p:not(.eyebrow){font-size:.9375rem;margin-bottom:12px}
+.closing-form label:first-child{margin-top:0}
+[data-theme=adventure] .journey-record{padding:0;overflow:hidden}
+.journey-record>.ticket-top{margin:0;padding:18px 20px;border-bottom:1px dashed var(--line);font-size:.75rem;gap:12px;flex-wrap:wrap}
+.journey-record-body{padding:24px}
+.record-heading{margin-bottom:20px}
+.record-heading h2{margin:0;font-size:1.5rem;overflow-wrap:anywhere}
+.journey-stats{display:flex;flex-wrap:wrap;gap:16px;margin:0 0 24px;padding:16px 0;border-top:1px dashed var(--line);border-bottom:1px dashed var(--line)}
+.journey-stats>div{flex:1 1 100px;min-width:0}
+.journey-stats dt{font-size:.75rem;color:var(--muted)}
+.journey-stats dd{margin:5px 0 0;font:700 1.65rem/1.4 ui-monospace,monospace;color:var(--accent);overflow-wrap:anywhere}
+.journey-stats dd small{font-size:.75rem;font-weight:400}
+.journey-stats .duration{font-family:inherit;font-size:1rem;font-weight:600;line-height:1.6;color:var(--ink)}
+.memory-note{padding:16px;border-left:3px solid #91b0a1;background:#edf3e9;margin-bottom:24px}
+.memory-note h3{font-size:.8125rem;color:var(--green);margin-bottom:8px}
+.memory-note p{white-space:pre-wrap;overflow-wrap:anywhere;margin:0;font-size:.9375rem}
+.journey-loot{display:flex;align-items:center;gap:12px;background:#f7efd9;border:1px solid #d4c6a5;padding:12px;margin-bottom:12px}
+.journey-loot img{width:86px;height:86px;object-fit:contain;image-rendering:pixelated;flex:none}
+.journey-loot>div{min-width:0}.journey-loot .eyebrow{font-size:.75rem;margin:0 0 4px}
+.journey-loot h3{font-size:1rem;overflow-wrap:anywhere;margin:0 0 4px}.journey-loot .help{margin:0}
+.reward-tiers{font-size:.8125rem;margin-bottom:24px}.reward-tiers summary{color:var(--muted)}
+.journey-log{margin-top:24px}.journey-log h3{font-size:1rem}
+.journey-tasks{list-style:none;padding:0;margin:0;counter-reset:journey}
+.journey-tasks li{counter-increment:journey;padding:14px 0 14px 30px;border-bottom:1px solid var(--line);position:relative}
+.journey-tasks li::before{content:counter(journey,decimal-leading-zero);position:absolute;left:0;top:18px;color:var(--muted);font:.75rem ui-monospace,monospace}
+.journey-tasks li>div{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.journey-tasks .tag{font-size:.75rem;padding:1px 6px}.task-earned{font-size:.8125rem;color:var(--green)}
+.journey-tasks p{margin:8px 0 0;overflow-wrap:anywhere;font-size:.9375rem}
+.journey-bonuses{list-style:none;margin:12px 0;padding:0;font-size:.8125rem;color:var(--muted)}
+.journey-bonuses li{display:flex;justify-content:space-between;gap:12px;padding:4px 0}
+.unfinished-tasks{font-size:.8125rem;margin:20px 0}.unfinished-tasks .ledger li{gap:12px}.unfinished-tasks .ledger span{overflow-wrap:anywhere;min-width:0}.unfinished-tasks small{flex:none}
+.record-actions{display:grid;gap:12px;margin-top:24px}.journey-record .footnote{margin:24px 0 0}
+@media(max-width:700px){.departure-grid{grid-template-columns:1fr;gap:18px}.departure-heading{padding:16px 18px 0}.departure-heading h1{font-size:1.65rem;margin-bottom:12px}.departure-heading h1 br{display:none}.departure-scene .journey-art{max-height:210px}.departure-caption{padding:8px 18px}.adventure-pass{padding:18px}.adventure-pass .ticket-top{margin-bottom:12px;padding-bottom:10px}.pass-note{margin:12px 0}.pass-stops{margin:12px 0 18px}.journey-record-body{padding:18px}.closing-intro .journey-art{max-height:210px}.closing-intro-copy{padding:18px}.journey-loot{gap:8px;padding:8px}.journey-loot img{width:68px;height:68px}.record-heading .journey-badge{width:52px;height:52px}.record-heading h2{font-size:1.25rem}}

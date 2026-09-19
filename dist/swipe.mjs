@@ -13,6 +13,8 @@ export function installCardGestures(root, {enabled, commit}) {
     card.classList.remove('is-dragging','swipe-ready');
     card.style.removeProperty('transform');
     card.style.removeProperty('--left-choice');card.style.removeProperty('--right-choice');
+    const stage=card.closest?.('.card-stage');
+    stage?.style.removeProperty('--left-choice');stage?.style.removeProperty('--right-choice');stage?.classList.remove('swipe-ready');
   };
   const cancel = () => {const g=gesture;gesture=null;if(g){reset(g.card);if(g.card.hasPointerCapture?.(g.id))g.card.releasePointerCapture(g.id);}};
   root.addEventListener('pointerdown',e=>{
@@ -39,6 +41,10 @@ export function installCardGestures(root, {enabled, commit}) {
     g.card.style.setProperty('--left-choice',Math.min(1,Math.max(0,-g.dx)/swipeThreshold(g.width)));
     g.card.style.setProperty('--right-choice',Math.min(1,Math.max(0,g.dx)/swipeThreshold(g.width)));
     g.card.classList.toggle('swipe-ready',!!swipeIntent(g.dx,g.dy,g.width));
+    const stage=g.card.closest?.('.card-stage');
+    stage?.style.setProperty('--left-choice',Math.min(1,Math.max(0,-g.dx)/swipeThreshold(g.width)));
+    stage?.style.setProperty('--right-choice',Math.min(1,Math.max(0,g.dx)/swipeThreshold(g.width)));
+    stage?.classList.toggle('swipe-ready',!!swipeIntent(g.dx,g.dy,g.width));
   },{passive:false});
   root.addEventListener('pointerup',e=>{
     const g=gesture;if(!g||e.pointerId!==g.id)return;

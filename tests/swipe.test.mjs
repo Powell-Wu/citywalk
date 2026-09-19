@@ -93,8 +93,8 @@ test('grabbing a card drops the deal-in class so the drag transform can apply',(
 // animation keeps the card pinned at "no transform" for the rest of its life.
 // The tilt then never appears even though the drag writes it every frame.
 test('deal-in animation must not fill forwards, or it would pin the card transform',()=>{
- const css=readFileSync(new URL('../dist/story.css',import.meta.url),'utf8');
+ const css=readFileSync(new URL('../dist/cards.css',import.meta.url),'utf8');
  const rule=/\.card-enter\{animation:deal-card[^}]*\}/.exec(css);
- assert.ok(rule,'the deal-in rule should exist in story.css');
+ assert.ok(rule,'the deal-in rule should exist in cards.css');
  assert.doesNotMatch(rule[0],/\b(both|forwards)\b/,'a forwards fill would override the drag transform after the deal-in ends');
 });

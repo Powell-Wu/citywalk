@@ -2,15 +2,19 @@ import 'fake-indexeddb/auto';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {initialState,newSession,draw,complete,finish,score,validateBackup} from '../dist/core.mjs';
-import {themeOf,setTheme} from '../dist/themes.mjs';
+import {themeOf,setTheme,themePicker} from '../dist/themes.mjs';
 import {readState,updateState} from '../dist/storage.mjs';
 
-test('legacy backups adopt warm skin; theme survives backup and rejects unknown values',()=>{
- const legacy=initialState();delete legacy.theme;
- assert.equal(themeOf(legacy),'warm');assert.equal(validateBackup(legacy).theme,'warm');
- setTheme(legacy,'story');assert.equal(validateBackup(legacy).theme,'story');
- for(const theme of ['unknown','__proto__',null,{}])assert.throws(()=>validateBackup({...legacy,theme}),/皮肤/);
+test('legacy themes migrate to adventure and unavailable themes cannot be selected',()=>{
+ for(const theme of [undefined,'warm','story','adventure']){
+  const legacy={...initialState(),theme};
+  assert.equal(themeOf(legacy),'adventure');assert.equal(validateBackup(legacy).theme,'adventure');
+ }
+ for(const theme of ['unknown','__proto__',null,{}])assert.throws(()=>validateBackup({...initialState(),theme}),/皮肤/);
+ for(const theme of ['warm','story'])assert.throws(()=>setTheme(initialState(),theme),/皮肤/);
+ const picker=themePicker(initialState());assert.doesNotMatch(picker,/叙事卡牌|data-theme-choice="warm"/);assert.match(picker,/disabled/);
 });
+
 test('changing skins persists after reload and preserves ongoing card, points, and history',async()=>{
  await updateState(s=>{
   newSession(s,s.preferences,1000);let se=s.session;
@@ -21,7 +25,7 @@ test('changing skins persists after reload and preserves ongoing card, points, a
   draw(s,se.id,se.slots[1].id);
  });
  const before=await readState();
- for(const theme of ['adventure','story','warm','adventure']){
+ for(const theme of ['adventure']){
   await updateState(s=>setTheme(s,theme));const after=await readState();
   assert.equal(after.theme,theme);assert.deepEqual(after.session,before.session);
   assert.deepEqual(after.history,before.history);assert.deepEqual(score(after.session),score(before.session));
@@ -29,4 +33,10 @@ test('changing skins persists after reload and preserves ongoing card, points, a
  }
  await assert.rejects(updateState(s=>setTheme(s,'invalid')),/皮肤/);
  assert.equal((await readState()).theme,'adventure');
+});
+
+test('legacy theme backup migration preserves active cards, history and score',()=>{
+ const s=initialState();newSession(s,s.preferences,1000);draw(s,s.session.id,s.session.slots[0].id);
+ complete(s,s.session.id,s.session.slots[0].id,s.session.slots[0].card.id,0,2000);
+ for(const theme of ['warm','story']){const restored=validateBackup({...s,theme});assert.deepEqual(restored.session,s.session);assert.deepEqual(score(restored.session),score(s.session));}
 });
