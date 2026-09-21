@@ -15,6 +15,9 @@ const files=[
  ['batch-03-rewards/03-explorer-badge-v1.png','explorer-badge.webp',256],
  ['batch-03-rewards/04-card-back-v1.png','card-back.webp',480],
  ['batch-04-journey/01-departure-v1.png','journey-departure.webp',960],
- ['batch-04-journey/02-keepsake-v1.png','journey-keepsake.webp',960]
+ ['batch-04-journey/02-keepsake-v1.png','journey-keepsake.webp',960],
+ ['batch-05-task-matching/01-photo-v1.png','art-photo.webp',540],
+ ['batch-05-task-matching/02-sound-v1.png','art-sound.webp',540],
+ ['batch-05-task-matching/03-cooperate-v1.png','art-cooperate.webp',540]
 ];
 (async()=>{for(const [source,name,width] of files){const result=await sharp(path.join(root,'assets/concepts',source)).resize({width,kernel:'nearest'}).webp({quality:78,alphaQuality:100,effort:6}).toFile(path.join(root,'dist',name));console.log(name,result.size);}})().catch(e=>{console.error(e);process.exitCode=1;});

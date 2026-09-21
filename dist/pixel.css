@@ -15,6 +15,7 @@
 [data-theme=adventure] .tag.talk{background:#e5eef5;color:var(--blue)}
 [data-theme=adventure] .tag.event{background:#fae9da;color:#975036}
 [data-theme=adventure] .nav{background:#fff8e9f5}
+.nav{gap:4px}.nav button{flex:1;max-width:140px;min-width:0;padding:10px 4px;font-size:.8125rem;white-space:nowrap}
 [data-theme=adventure] .score-bar{background:var(--white);padding:12px;border-color:var(--line)}
 [data-theme=adventure] .step{background:#e4e9e7;color:var(--muted)}
 [data-theme=adventure] .step.done{color:white;background:var(--green)}
@@ -28,7 +29,7 @@
 .card-heading{padding:3px 4px 10px}
 .card-heading .tag{border:0;background:transparent;padding:3px 0;font-weight:700}
 .task-art{display:block;width:100%;height:auto;aspect-ratio:3/4;object-fit:contain;image-rendering:pixelated;border-radius:2px;pointer-events:none}
-.shell[data-page=walk] .task-art{height:clamp(220px,36svh,340px);aspect-ratio:auto;background:#e9f0ed}
+.shell[data-page=walk] .task-art{height:clamp(150px,calc(100svh - 560px),300px);aspect-ratio:auto;background:#e9f0ed}
 .shell[data-page=walk] .brand{margin-bottom:12px;padding-bottom:10px}
 .shell[data-page=walk] .page-head{margin-bottom:10px}
 .shell[data-page=walk] .page-head .eyebrow{margin-bottom:2px;font-size:.75rem}
@@ -44,11 +45,16 @@
 .card-options .actions{padding:8px 0;gap:8px}
 .draw-card-art{display:flex;justify-content:center;padding:10px;background:var(--paper)}
 .draw-card-art img{display:block;width:65%;height:auto;max-height:340px;object-fit:contain;image-rendering:pixelated}
+.shell[data-page=walk] .draw-card-art img{max-height:200px}
 .swipe-reveal{position:absolute;top:15%;bottom:20%;width:48%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;border:2px solid currentColor;border-radius:5px;font-size:2rem;pointer-events:none;z-index:0}
 .swipe-reveal strong{font-size:1.2rem}.swipe-reveal span{font-size:.8125rem;visibility:hidden}
 .reveal-left{right:0;background:#fae9da;color:#8d4e32;opacity:var(--left-choice)}
 .reveal-right{left:0;background:#dfefe4;color:#285d49;opacity:var(--right-choice)}
 .card-stage.swipe-ready .swipe-reveal{border-width:4px}.card-stage.swipe-ready .swipe-reveal span{visibility:visible}
+.swipe-reveal .swipe-pending{visibility:visible}.swipe-reveal .swipe-commit{display:none}
+.card-stage.swipe-ready .swipe-pending{display:none}.card-stage.swipe-ready .swipe-commit{display:block}
+.swipe-meter{display:block;width:64px;height:5px;background:currentColor;transform:scaleX(var(--right-choice));transform-origin:left;transition:transform 60ms linear}
+.reveal-left .swipe-meter{transform:scaleX(var(--left-choice))}
 .reward-dialog{border:2px solid #285269;border-radius:6px;background:#fff8e9;color:var(--ink);width:min(340px,calc(100% - 32px));padding:12px 20px 18px;text-align:center;box-shadow:5px 5px 0 #17354d33}
 .reward-dialog::backdrop{background:#17354d66}.reward-dialog h2{margin:0 0 4px}.reward-dialog p{margin:0 0 6px;font-weight:700;color:var(--accent)}
 .reward-scene{position:relative;width:240px;max-width:100%;aspect-ratio:1;margin:auto}
@@ -64,10 +70,66 @@
 @keyframes chest-open-frame{0%,28%{opacity:0}29%,100%{opacity:1}}
 @keyframes loot-rise{0%,35%{opacity:0;transform:translateY(50px) scale(.6)}65%,100%{opacity:1;transform:translateY(0) scale(1)}}
 @keyframes loot-spark{0%,40%{opacity:0;transform:scale(.5)}65%{opacity:1;transform:scale(1)}100%{opacity:0;transform:translateY(-18px)}}
+.reward-dialog:not(.reward-milestone) .chest,.reward-dialog:not(.reward-milestone) .loot-badge,.reward-dialog:not(.reward-milestone) .loot-spark{animation-duration:1s}
+.reward-milestone{border-color:#a87529;box-shadow:5px 5px 0 #cda75555}
+.milestone-prize{background:#f7ecd1;border-top:1px solid #c9ab73;border-bottom:1px solid #c9ab73;padding:14px 8px;margin:14px 0 20px;overflow-wrap:anywhere}
+.milestone-prize strong{display:block;font-size:1.1rem}.milestone-prize span{display:block;font-size:.75rem;color:var(--muted);margin-top:6px}
+@keyframes score-pop{50%{transform:scale(1.1);color:var(--green)}}
 @media(max-width:700px){.shell{padding-left:16px;padding-right:16px}.page-head{margin-bottom:14px}.score-bar{margin-bottom:14px}.brand{margin-bottom:16px}.card-heading .small{font-size:.8rem}}
 @media(prefers-reduced-motion:reduce){.card-stage:has(.task-card.is-dragging) .swipe-reveal{z-index:3;top:12%;bottom:auto;padding:16px;width:auto;min-width:42%}.reward-playing .chest-closed{opacity:0}.reward-playing .chest-open,.reward-playing .loot-badge{opacity:1}}
 
 /* Departure pass and saved journey share the task deck's paper and pixel art. */
+.collection-cover,.journal-cover,.setup-intro{display:flex;align-items:center;gap:16px;padding:18px;background:#edf2e9;border:1px solid var(--line);margin-bottom:22px}
+.collection-cover>div,.journal-cover>div{min-width:0}.collection-cover img,.journal-cover img{object-fit:contain;image-rendering:pixelated;flex:none}
+.collection-cover .eyebrow,.journal-cover .eyebrow,.setup-intro .eyebrow{font-size:.75rem;margin-bottom:6px}
+.collection-cover p,.journal-cover p,.setup-intro p{margin:0 0 6px}
+.collection-tabs{gap:8px}.collection-tabs .chip{min-height:42px;border-radius:3px}
+.collection-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.collection-card{--collection-tone:var(--green);display:flex;flex-direction:column;border:1px solid var(--line);border-top:3px solid var(--collection-tone);background:var(--white);box-shadow:3px 3px #17354d12;min-width:0}
+.collection-card.talk{--collection-tone:var(--blue);border-radius:10px 10px 10px 0}.collection-card.event{--collection-tone:#935627;border-top-style:double;border-top-width:5px}
+.collection-art{display:flex;align-items:center;gap:18px;padding:12px;background:#eef2ed;border-bottom:1px solid var(--line)}
+.collection-art img{width:66px;height:88px;object-fit:contain;image-rendering:pixelated}.collection-art span{font-size:.8125rem;font-weight:650;color:var(--collection-tone)}
+.collection-copy{padding:16px;flex:1}.collection-copy h2{font-size:1.05rem;line-height:1.5;margin:12px 0 8px;overflow-wrap:anywhere}
+.collection-copy .help{margin:8px 0;overflow-wrap:anywhere}.collection-copy .actions{gap:8px;margin-top:12px;flex-wrap:wrap}.collection-copy .btn.text{font-size:.8125rem;padding:6px 8px;min-height:44px;border:1px solid var(--line)}
+.shelved-label{font-size:.75rem;color:var(--muted)}.card-shelved .collection-art img{filter:grayscale(.7)}.card-shelved{border-style:dashed}
+.journal-list{border-left:2px solid var(--line);padding-left:20px;margin-left:12px}.journal-entry{position:relative;background:var(--white);border:1px solid var(--line);padding:18px;margin-bottom:18px}
+.journal-index{position:absolute;left:-35px;top:20px;background:var(--paper);border:1px solid var(--line);color:var(--accent);width:26px;height:26px;display:grid;place-items:center;font:.7rem ui-monospace,monospace}
+.journal-entry h2{font-size:1.2rem;overflow-wrap:anywhere;margin:12px 0 6px}.journal-entry .help{margin:0 0 10px}.journal-entry .btn{padding:5px 0;min-height:40px}
+.journal-excerpt{border-left:2px solid #99b3a6;padding-left:12px;color:var(--muted);font-size:.9rem;overflow-wrap:anywhere}.journal-empty-art{display:block;width:100%;height:auto;max-height:190px;object-fit:contain;image-rendering:pixelated;margin-bottom:20px}
+.setup-emblem{display:grid;place-items:center;flex:none;width:42px;height:42px;background:var(--accent);color:var(--white);font-size:1.5rem;box-shadow:3px 3px #bdcfc4}
+.shell[data-page=setup] .mode{border-radius:3px;border-top:3px solid var(--line);box-shadow:2px 2px #17354d12}.shell[data-page=setup] .mode:has(input:checked){border-top-color:var(--green);background:#edf4ed}
+.settings-intro{padding:0 0 16px;border-bottom:1px dashed var(--line);margin-bottom:24px}.settings-intro .eyebrow{margin-bottom:8px;font-size:.75rem}.settings-intro p:last-child{font-size:.9375rem;color:var(--muted);margin:0}
+.shell[data-page=settings] .panel h2{font-size:1.1rem;border-left:4px solid var(--green);padding-left:10px}.shell[data-page=settings] .panel{padding:20px}.shell[data-page=settings] .help{line-height:1.75}
+@media(max-width:700px){.collection-grid{grid-template-columns:1fr}.collection-card{display:grid;grid-template-columns:88px minmax(0,1fr)}.collection-art{flex-direction:column;gap:8px;padding:12px 6px;border-bottom:0;border-right:1px solid var(--line);align-items:center;justify-content:flex-start}.collection-art span{font-size:.7rem;text-align:center}.collection-art img{width:64px;height:86px}.collection-copy{padding:12px}.collection-copy h2{font-size:1rem}.collection-cover,.journal-cover,.setup-intro{padding:14px;gap:12px}.journal-entry{padding:14px}.journal-list{padding-left:16px}.journal-index{left:-31px}}
+/* Three quest families: map corners, dialogue panels, and checkpoint stripes. */
+.task-card.scene{--quest-tone:#376f62;--quest-paper:#edf4ed}
+.task-card.talk{--quest-tone:#366b91;--quest-paper:#edf3fa}
+.task-card.event{--quest-tone:#935627;--quest-paper:#fcf0df}
+.quest-identity{display:flex;align-items:center;gap:8px;min-width:0}
+.quest-emblem{display:block;flex:none;fill:currentColor;color:var(--quest-tone);shape-rendering:crispEdges}
+.quest-value{flex:none;font-variant-numeric:tabular-nums;color:var(--quest-tone);font-weight:650}
+.task-card .card-heading{gap:8px;min-height:40px}
+.task-card .card-heading .tag{color:var(--quest-tone);white-space:nowrap}
+.quest-art-frame{position:relative;padding:5px;border:1px solid var(--line);background:var(--quest-paper);pointer-events:none}
+.quest-art-frame::before,.quest-art-frame::after{content:"";position:absolute;pointer-events:none;z-index:1}
+.scene .quest-art-frame::before{inset:-2px auto auto -2px;width:22px;height:22px;border-top:3px solid var(--quest-tone);border-left:3px solid var(--quest-tone)}
+.scene .quest-art-frame::after{inset:auto -2px -2px auto;width:22px;height:22px;border-bottom:3px solid var(--quest-tone);border-right:3px solid var(--quest-tone)}
+.scene .quest-brief{border-bottom:1px dashed var(--quest-tone);margin-bottom:10px}
+.talk .quest-art-frame{border:2px solid var(--quest-tone);border-radius:10px 10px 10px 2px;padding:4px}
+.talk .quest-brief{position:relative;border-left:3px solid var(--quest-tone);padding:0 0 0 10px;margin:14px 0 12px;background:linear-gradient(90deg,var(--quest-paper),transparent)}
+.talk .quest-brief::before{content:"";position:absolute;left:-3px;top:-7px;width:9px;height:9px;border-left:3px solid var(--quest-tone);border-top:3px solid var(--quest-tone);background:var(--white)}
+[data-theme=adventure] .talk .quest-brief h2{margin-top:0}
+.event .quest-art-frame{padding:6px 4px;border-top:5px solid var(--quest-tone);border-bottom:5px solid var(--quest-tone)}
+.event .quest-art-frame::before{height:5px;left:0;right:0;top:-5px;background:repeating-linear-gradient(90deg,transparent 0 12px,var(--quest-paper) 12px 16px)}
+.event .quest-art-frame::after{height:5px;left:0;right:0;bottom:-5px;background:repeating-linear-gradient(90deg,transparent 0 12px,var(--quest-paper) 12px 16px)}
+.event .quest-brief{border-bottom:2px solid var(--quest-tone);margin-bottom:10px}
+.event .quest-value{background:var(--quest-paper);border:1px solid var(--quest-tone);padding:1px 6px;box-shadow:2px 2px var(--quest-tone)}
+.task-card .task-meta{display:flex;flex-wrap:wrap;gap:4px 12px}
+.task-card .draw-card-art{position:relative;background:var(--quest-paper)}
+.deck-seal{position:absolute;bottom:14px;right:14px;background:var(--white);border:2px solid var(--quest-tone);padding:6px;box-shadow:2px 2px var(--quest-tone);pointer-events:none}
+.talk .deck-seal{border-radius:8px 8px 8px 0}.event .deck-seal{border-style:double;border-width:4px}
+@media(max-width:360px){.quest-identity{gap:5px}.quest-emblem{width:24px;height:24px}.task-card .quest-value{font-size:.75rem}.task-card .card-heading{padding-left:1px;padding-right:1px}}
+
 .departure-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:28px;align-items:center}
 .departure-grid>*{min-width:0}
 .departure-scene{border:1px solid var(--line);border-radius:5px;background:var(--white);overflow:hidden}

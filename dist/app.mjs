@@ -5,7 +5,7 @@ import {THEMES,themeOf,setTheme,themePicker} from './themes.mjs';
 import {installCardGestures,animateCardExit} from './swipe.mjs';
 import {createUpdater} from './updates.mjs';
 import {RELEASE} from './release.mjs';
-import {showCompletion} from './rewards.mjs';
+import {showCompletion,rewardMilestone} from './rewards.mjs';
 import {saveUpdateDraft,restoreUpdateDraft,readUpdateView} from './drafts.mjs';
 const app=document.querySelector('#app');
 let state=initialState(),ready=false,busy=false,transitioning=false;
@@ -57,10 +57,16 @@ async function performCardAction(action,d){
   if(action==='complete')ui.focusSlot=null;
   // Persist first. A failed save must never animate a successful decision.
   if(animated)exitAnimation=await animateCardExit(oldCard,action);
-  if(animated&&action==='complete')await showCompletion({points:score(state.session).total-before,scoring:state.session.scoring});
+  if(animated&&action==='complete'){
+   // Replace the departed card before opening the reward: its offscreen transform
+   // must not widen the document or leave stale points behind the modal.
+   render();exitAnimation?.cancel();exitAnimation=null;window.scrollTo({top:0,behavior:'instant'});
+   await showCompletion({points:score(state.session).total-before,scoring:state.session.scoring,milestone:rewardMilestone(state.session,before)});
+  }
   // A successful write remains successful even if a subsequent refresh cannot read.
   try{state=await readState();}catch{}
   render();
+  window.scrollTo({top:0,behavior:'instant'});
   if(animated){app.querySelector('.task-card')?.classList.add('card-enter');if(state.session&&score(state.session).total>before)app.querySelector('.score-value')?.classList.add('score-pop');}
   if(restoreFocus){const next=app.querySelector('.task-card h2')||app.querySelector('main h1');next?.setAttribute('tabindex','-1');next?.focus({preventScroll:true});}
   const gained=state.session?score(state.session).total-before:0;
@@ -75,14 +81,14 @@ case'skins':skinsDialog();return;
 case'set-theme':await chooseTheme(d.themeChoice);return;
 case'nav':go(d.route);return;
 case'reload':await boot();return;
-case'draw':ui.focusSlot=await mutate(s=>draw(s,d.session,d.slot,d.type));render();if(themeOf(state)==='adventure')app.querySelector('.task-card')?.classList.add('card-enter');return;
+case'draw':ui.focusSlot=await mutate(s=>draw(s,d.session,d.slot,d.type));render();window.scrollTo({top:0,behavior:'instant'});if(themeOf(state)==='adventure')app.querySelector('.task-card')?.classList.add('card-enter');return;
 case'replace':case'complete':await performCardAction(d.action,d);return;
 case'later':await mutate(s=>setSlotStatus(s,d.session,d.slot,'later'));ui.focusSlot=null;toast('已移到稍后');break;
 case'skip':await mutate(s=>setSlotStatus(s,d.session,d.slot,'skipped'));ui.focusSlot=null;break;
 case'pause':await mutate(s=>togglePause(s,d.session));break;
 case'focus':ui.focusSlot=d.slot;break;
 case'undo':if(await confirmBox('撤销最近一次完成？','这张卡会回到待完成，相关分数和任务花费也会恢复。','撤销完成'))ui.focusSlot=await mutate(s=>undo(s,d.session));break;
-case'bonus':await mutate(s=>{const se=activeSession(s,d.session);if(!['surprise','laugh'].includes(d.key))throw Error('奖励不存在。');se.bonuses[d.key]=!se.bonuses[d.key];});break;
+case'bonus':{const before=score(state.session).total;await mutate(s=>{const se=activeSession(s,d.session);if(!['surprise','laugh'].includes(d.key))throw Error('奖励不存在。');se.bonuses[d.key]=!se.bonuses[d.key];});const milestone=rewardMilestone(state.session,before);if(milestone){transitioning=true;try{await showCompletion({points:score(state.session).total-before,milestone});}finally{transitioning=false;}}break;}
 case'filters':filtersDialog();return;
 case'filter-type':ui.libraryType=d.type;break;
 case'filter-favorites':ui.libraryFavorites=!ui.libraryFavorites;break;
@@ -97,7 +103,7 @@ case'apply-update':await applyUpdate();return;
 }render();}catch(e){toast(e.message||'刚才的操作没有成功，请重试。');if(ui.storageError)render();}});
 document.addEventListener('submit',async event=>{const f=event.target;if(!['setup-form','finish-form','reward-form','card-form','filters-form'].includes(f.id))return;event.preventDefault();if(busy||transitioning||!f.reportValidity())return;const data=new FormData(f),submit=f.querySelector('[type="submit"]');submit.disabled=true;try{switch(f.id){
 case'setup-form':await mutate(s=>newSession(s,{mode:data.get('mode'),place:data.get('place'),budget:Number(data.get('budget')),scoring:data.has('scoring'),rewards:s.preferences.rewards}));ui.focusSlot=null;go('walk');break;
-case'finish-form':{const id=await mutate(s=>finish(s,f.dataset.session,{name:data.get('name'),memory:data.get('memory'),closing:data.has('closing')}));go(`detail/${id}`);toast('记录已保存');break;}
+case'finish-form':{const before=score(state.session).total;const id=await mutate(s=>finish(s,f.dataset.session,{name:data.get('name'),memory:data.get('memory'),closing:data.has('closing')}));go(`detail/${id}`);toast('记录已保存');const saved=state.history.find(h=>h.id===id),milestone=rewardMilestone(saved,before);if(milestone){transitioning=true;try{await showCompletion({points:score(saved).total-before,milestone});}finally{transitioning=false;}}break;}
 case'reward-form':await mutate(s=>{s.preferences.rewards=[0,1,2].map(i=>String(data.get(`reward${i}`)).trim().slice(0,80)||REWARDS[i]);});toast('奖励已保存，下局生效');break;
 case'card-form':{const card={id:'custom-'+uid(),type:data.get('type'),text:String(data.get('text')).trim(),note:String(data.get('note')).trim(),minutes:Number(data.get('minutes')),cost:Number(data.get('cost')),place:data.get('place'),source:'custom'};validateCustomCard(card);await mutate(s=>{if(s.customCards.length>=500)throw Error('自定义卡片已达到500张上限。');s.customCards.push(card);});ui.customEditor=false;ui.libraryType='all';ui.libraryFavorites=false;toast('卡片已添加');break;}
 case'filters-form':await mutate(s=>{const se=activeSession(s,f.dataset.session);const budget=Number(data.get('budget')),place=data.get('place');if(!Number.isFinite(budget)||budget<0||budget>10000||!['both','indoor','outdoor'].includes(place))throw Error('请检查预算和场景。');se.budget=budget;se.place=place;});f.closest('dialog').close();toast('筛选已更新');break;

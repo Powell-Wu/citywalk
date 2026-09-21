@@ -14,7 +14,7 @@ test('task art is stable, all built-in and custom card types resolve to packaged
   assert(existsSync(new URL('../dist/'+art.src,import.meta.url)));
   assert(sw.includes(`'./${art.src}'`));
  }
- assert.equal(covered.size,6);
+ assert.equal(covered.size,9);
  for(const file of ['card-back.webp','chest-closed.webp','chest-open.webp','explorer-badge.webp'])assert(sw.includes(`'./${file}'`));
 });
 
