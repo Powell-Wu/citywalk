@@ -11,14 +11,11 @@ export function adventureHome(s,ui,{esc,fmtDate,navBtn}){
  ${art('journey-departure.webp','两位探险者在晴日街角查看地图，前方是发光的城市入口','fetchpriority="high"')}
  <p class="departure-caption">带上彼此，出发。</p>
  </section>
- <section class="departure-pass"><article class="ticket adventure-pass">
- <div class="ticket-top"><span>冒险通行证</span><span>NO. ${String(s.history.length+1).padStart(3,'0')}</span></div>
- <div class="pass-heading">${badge()}<div><p class="eyebrow">双人同行</p><h2>${se?'这一程，接着走':'今天，从这里出发'}</h2></div></div>
- <p class="pass-note">${se?`${fmtDate(se.startedAt)} · ${MODES[se.mode].name}${se.pausedAt?' · 暂停中':''}`:'拐个弯，看看会遇到什么。'}</p>
- ${se?`<div class="pass-progress"><span>已完成 <strong>${sc.count}</strong> 张任务</span>${se.scoring?`<span>${sc.total} 积分</span>`:''}</div>`:'<div class="pass-stops" aria-label="冒险内容"><span>观察城市</span><span>聊聊彼此</span><span>一起尝试</span></div>'}
- ${navBtn(se?'继续冒险':'领取通行证',se?'walk':'setup','block')}
- <p class="footnote">${se?'进度已保存':'短途 · 半日 · 自由走走'}</p>
- </article>${s.history.length?`<div class="last-journey"><span class="small muted">上一程</span><p>${esc(s.history[0].name)}</p>${navBtn('翻看回忆',`detail/${esc(s.history[0].id)}`,'text')}</div>`:''}
+ <section class="departure-pass"><article class="ticket adventure-pass passport-ticket">
+ <div class="passport-main"><p class="eyebrow">一起走走</p><h2>双人冒险通行证</h2><p class="pass-note">${se?`${fmtDate(se.startedAt)} · ${MODES[se.mode].name}`:'城市里，藏着下一关。'}</p>
+ <div class="passport-number"><span>NO. ${String(s.history.length+1).padStart(3,'0')}</span>${se?`<span>${se.pausedAt?'暂停中':`已完成 ${sc.count} 张`}</span>`:''}</div></div>
+ <div class="passport-stub">${badge()}<span>双人<br>同行</span><i aria-hidden="true">✦ ✦</i></div>
+ </article><div class="passport-action">${navBtn(se?'继续冒险':'领取通行证',se?'walk':'setup','block')}<p class="footnote">${se?'进度已保存':'短途 · 半日 · 自由走走'}</p></div>${s.history.length?`<div class="last-journey"><span class="small muted">上一程</span><p>${esc(s.history[0].name)}</p>${navBtn('翻看回忆',`detail/${esc(s.history[0].id)}`,'text')}</div>`:''}
  <p class="status-line" data-offline>${ui.offlineReady?'✓ 离线内容已准备好':'首次出门前，请联网打开一次，准备离线内容。'}</p></section></div>`;
 }
 

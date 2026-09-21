@@ -2,7 +2,7 @@ import {TYPES,REWARDS,uid,initialState,allCards,score,elapsed,newSession,activeS
 import {readState,updateState} from './storage.mjs';
 import {renderView,currentSlot,dueText,timeText,esc,button,filterForm} from './views.mjs';
 import {THEMES,themeOf,setTheme,themePicker} from './themes.mjs';
-import {installCardGestures,animateCardExit} from './swipe.mjs';
+import {installCardGestures,animateCardExit,animateCardTurn} from './swipe.mjs';
 import {createUpdater} from './updates.mjs';
 import {RELEASE} from './release.mjs';
 import {showCompletion,rewardMilestone} from './rewards.mjs';
@@ -81,7 +81,7 @@ case'skins':skinsDialog();return;
 case'set-theme':await chooseTheme(d.themeChoice);return;
 case'nav':go(d.route);return;
 case'reload':await boot();return;
-case'draw':ui.focusSlot=await mutate(s=>draw(s,d.session,d.slot,d.type));render();window.scrollTo({top:0,behavior:'instant'});if(themeOf(state)==='adventure')app.querySelector('.task-card')?.classList.add('card-enter');return;
+case'draw':{const oldCard=app.querySelector('.task-card');let turn;transitioning=true;try{ui.focusSlot=await mutate(s=>draw(s,d.session,d.slot,d.type));turn=await animateCardTurn(oldCard);render();turn?.cancel();turn=null;turn=await animateCardTurn(app.querySelector('.task-card'),true);const card=app.querySelector('.task-card');card?.focus({preventScroll:true});}finally{turn?.cancel();transitioning=false;}return;}
 case'replace':case'complete':await performCardAction(d.action,d);return;
 case'later':await mutate(s=>setSlotStatus(s,d.session,d.slot,'later'));ui.focusSlot=null;toast('已移到稍后');break;
 case'skip':await mutate(s=>setSlotStatus(s,d.session,d.slot,'skipped'));ui.focusSlot=null;break;

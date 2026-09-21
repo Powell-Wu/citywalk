@@ -5,6 +5,12 @@ export function swipeIntent(dx, dy, width) {
   return dx > 0 ? 'complete' : 'replace';
 }
 export const motionDuration = reduced => reduced ? 0 : 260;
+export async function animateCardTurn(card,reveal=false){
+ if(!card?.isConnected||!card.animate||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+ const animation=card.animate(reveal?[{transform:'rotateY(-90deg)'},{transform:'rotateY(0)'}]:[{transform:'rotateY(0)'},{transform:'rotateY(90deg)'}],{duration:170,easing:reveal?'ease-out':'ease-in',fill:'forwards'});
+ try{await animation.finished;}catch{}
+ return animation;
+}
 
 export function installCardGestures(root, {enabled, commit}) {
   let gesture = null, suppressClickUntil = 0;

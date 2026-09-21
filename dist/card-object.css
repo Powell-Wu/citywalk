@@ -1,0 +1,32 @@
+/* One physical silhouette shared by the front and back. */
+.solid-deck{max-width:360px;padding:6px 0 0}
+.card-object{position:relative;aspect-ratio:5/7;perspective:1200px;isolation:isolate}
+.solid-deck .card-back{inset:0;border:5px solid #19394f;border-radius:7px;background:#173d4e url('./deck-pattern.svg') center/cover;box-shadow:inset 0 0 0 2px #e5c782}
+[data-theme=adventure] .solid-deck .solid-card{position:relative;display:block;width:100%;height:100%;min-height:0;margin:0;padding:6px;border:6px solid #19394f;border-radius:7px;background:#fff6df;box-shadow:inset 0 0 0 2px #e5c782,2px 3px 0 #132d4140;color:var(--ink);transform-origin:center;backface-visibility:hidden}
+[data-theme=adventure] .solid-deck .card-front{display:grid;grid-template-rows:9% 58% 33%;overflow:hidden}
+[data-theme=adventure] .solid-deck .card-reverse{background:#163c4e url('./deck-pattern.svg') center/cover;cursor:pointer}
+.solid-deck .card-reverse:focus-visible{outline:3px solid #2d8d86;outline-offset:5px}
+.solid-deck .card-reverse:disabled{cursor:default;opacity:.75}
+.solid-deck .card-heading{display:flex;align-items:center;justify-content:space-between;gap:6px;min-height:0;padding:0 8px;border-bottom:1px solid #cbb87c;background:#fff6df;font-size:.875rem;font-weight:700}
+.solid-deck .quest-emblem{width:22px;height:22px}.solid-deck .quest-value{font-size:.875rem;box-shadow:none;border:0;background:none;padding:0}
+.solid-deck .quest-art-frame{min-height:0;padding:0;border:0;border-radius:0;overflow:hidden;background:#e3ede9}
+.solid-deck .quest-art-frame::before,.solid-deck .quest-art-frame::after{display:none}
+.shell[data-page=walk] .solid-deck .task-art{display:block;width:100%;height:100%;aspect-ratio:auto;object-fit:cover;object-position:50% 42%;border-radius:0}
+.solid-deck .task-copy{padding:9px 10px 5px;display:flex;flex-direction:column;gap:5px;min-height:0;background:#fff6df;border-top:2px solid #d2bd82}
+[data-theme=adventure] .solid-deck .task-card h2{font-size:1.0625rem;line-height:1.35;margin:0;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;flex-shrink:0;max-height:4.05em;overflow-wrap:anywhere}
+.solid-deck .task-note{font-size:.8125rem;line-height:1.4;margin:0;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;min-height:0}
+.solid-deck .task-meta{font-size:.6875rem;line-height:1.3;gap:4px 8px;margin-top:auto;padding-top:3px;border-top:1px solid #deceaa;flex-shrink:0}
+.solid-deck .deck-caption{text-align:center;font-size:.875rem;padding:16px 0 0}.deck-caption p{margin:0 0 6px}
+.solid-deck .deck-tools{padding:2px 4px 10px}.deck-tools .card-options,.task-reading{font-size:.8125rem;margin:8px 0}.task-reading summary{color:var(--muted);cursor:pointer}.task-reading h3{font-size:1rem;margin:12px 0 6px;overflow-wrap:anywhere}.task-reading p{white-space:pre-wrap;overflow-wrap:anywhere;margin-bottom:12px}
+.solid-deck .swipe-reveal{top:15%;bottom:15%}
+.visually-hidden{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+/* Ticket has a punched outline, a perforated stub and a separate action. */
+[data-theme=adventure] .passport-ticket{display:grid;grid-template-columns:minmax(0,1fr) 26%;padding:8px;border:6px solid #19394f;border-radius:4px;box-shadow:inset 0 0 0 2px #e5c782;min-height:208px;background:radial-gradient(circle at 18% 75%,#abc6ba33 0 24%,transparent 24%),repeating-linear-gradient(135deg,transparent 0 38px,#b6c9b41a 39px 40px),#fff6df;mask:radial-gradient(circle 12px at 0 50%,transparent 97%,black 100%) left/51% 100% no-repeat,radial-gradient(circle 12px at 100% 50%,transparent 97%,black 100%) right/51% 100% no-repeat}
+.passport-main{padding:14px 10px;min-width:0;display:flex;flex-direction:column;justify-content:center}
+.passport-main .eyebrow{font-size:.75rem;margin:0 0 10px}.passport-main h2{font-size:clamp(1.05rem,2.5vw,1.6rem);line-height:1.5;margin:0 0 8px}
+.passport-main .pass-note{font-size:.75rem;margin:0 0 16px}.passport-number{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:auto;font:.6875rem ui-monospace,monospace;color:var(--muted)}
+.passport-stub{border-left:2px dashed #365369;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:7px;font-size:.8125rem;font-weight:700;text-align:center;padding:8px 4px}
+.passport-stub .journey-badge{width:52px;height:52px}.passport-stub i{color:#ab8433;font-size:.75rem;font-style:normal}
+.passport-action{margin:20px 12px 0}.passport-action .btn{border:3px double #e4c783;background:#19394f}.passport-action .footnote{text-align:center;margin:12px 0 0}
+@media(max-width:360px){.solid-deck .task-copy{padding:7px 7px 4px;gap:4px}[data-theme=adventure] .solid-deck .task-card h2{font-size:1rem}.solid-deck .card-heading{padding:0 5px;font-size:.8125rem}.passport-main{padding:10px 5px}.passport-stub .journey-badge{width:42px;height:42px}}
+@media(prefers-reduced-motion:reduce){.solid-deck .solid-card{transition:none}.solid-deck .swipe-meter{transition:none}}
