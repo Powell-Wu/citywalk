@@ -39,8 +39,8 @@ test('completion can be dismissed or interrupted without leaving dialog listener
    globalThis.document={hidden:false,createElement:()=>layer,body:{append(){}},addEventListener:(k,v)=>doc.set(k,v),removeEventListener:k=>doc.delete(k)};
    globalThis.window={addEventListener:(k,v)=>win.set(k,v),removeEventListener:k=>win.delete(k)};
    globalThis.matchMedia=()=>({matches:reduced});
-   const done=showCompletion({points:2,scoring:false});
-   assert.equal(handlers.mode,reduced?'reward-still':'reward-playing');assert.doesNotMatch(layer.innerHTML,/\+2 积分/);
+   const done=showCompletion({points:2,milestone:{points:8,name:'一起吃甜品'}});
+   assert.equal(handlers.mode,reduced?'reward-still':'reward-playing');assert.match(layer.innerHTML,/一起吃甜品/);
    if(trigger==='button')click();
    if(trigger==='cancel')handlers.cancel({preventDefault(){}});
    if(trigger==='hashchange')win.get('hashchange')();

@@ -7,6 +7,7 @@ const frames={
  event:{name:'挑战任务',title:'一起试试这一关？',icon:'<path d="M4 2h3v20H4zM7 3h14v11H7z"/><path d="M9 5h4v3H9zM16 5h3v3h-3zM13 8h3v3h-3z" fill="var(--white)"/>'}
 };
 const emblem=type=>`<svg class="quest-emblem" viewBox="0 0 24 24" width="28" height="28" aria-hidden="true" focusable="false">${frames[type].icon}</svg>`;
+export const taskName=type=>frames[type].name;
 export function taskCardView(se,x,{esc,button,dueText},hint=true){
  const c=x.card,a=`data-session="${se.id}" data-slot="${x.id}"`,disabled=se.pausedAt?'disabled':'';
  const actions=c?`${a} data-card="${esc(c.id)}" ${disabled}`:'';
@@ -21,7 +22,7 @@ export function taskCardView(se,x,{esc,button,dueText},hint=true){
  <div class="task-copy"><h2>${esc(c.text)}</h2>${c.note&&c.text.length+c.note.length<=65?`<p class="task-note">${esc(c.note)}</p>`:''}<div class="task-meta"><span>约 ${c.minutes} 分钟</span><span>${c.cost?`预算 ¥${c.cost} 内`:'无需花费'}</span></div></div></article>`:
  `<button type="button" class="task-card solid-card card-reverse ${x.type}" data-action="draw" ${a} ${disabled} aria-label="抽一张${TYPES[x.type].name}"><span class="visually-hidden">点击翻开${frames[x.type].name}</span></button>`}</div>
  <div class="deck-caption">${se.pausedAt?'<p>暂停中 · 继续后可以操作</p>':c?(hint?'<p class="swipe-guide">左滑换卡 · 右滑完成</p>':''):`<p>点击翻开 · ${frames[x.type].name}</p><p class="muted small" data-due>${dueText(se,x)}</p>`}</div>
- <div class="deck-tools">${detail}${c&&c.cost?`<label for="actual-cost">实际花费（元）</label><input id="actual-cost" type="number" min="0" max="10000" step="0.01" inputmode="decimal" value="0" ${disabled}>`:''}
- ${c?`<details class="card-options"><summary>更多操作</summary><div class="actions">${button('完成','complete',actions)}${button('换一张','replace',actions,'outline')}${button('稍后再做','later',`${a} ${disabled}`,'text')}${button('跳过','skip',`${a} ${disabled}`,'text')}</div></details>`:button('跳过这个节点','skip',`${a} ${disabled}`,'text')}</div>
+ <div class="deck-tools">${c?`<details class="card-options"><summary>更多操作</summary><div class="actions">${button('完成','complete',actions)}${button('换一张','replace',actions,'outline')}${button('稍后再做','later',`${a} ${disabled}`,'text')}${button('跳过','skip',`${a} ${disabled}`,'text')}</div></details>`:button('跳过这个节点','skip',`${a} ${disabled}`,'text')}
+ ${c&&c.cost?`<div class="task-expense"><label for="actual-cost">完成前填实际花费（元）</label><input id="actual-cost" type="number" min="0" max="10000" step="0.01" inputmode="decimal" value="0" ${disabled}></div>`:''}${detail}</div>
  <p class="deck-count">${se.mode==='free'?'自由模式':`本局另有 ${se.slots.filter(k=>!['done','skipped'].includes(k.status)&&k.id!==x.id).length} 张待完成`}</p></div>`;
 }

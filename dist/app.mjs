@@ -6,10 +6,21 @@ import {installCardGestures,animateCardExit,animateCardTurn} from './swipe.mjs';
 import {createUpdater} from './updates.mjs';
 import {RELEASE} from './release.mjs';
 import {showCompletion,rewardMilestone} from './rewards.mjs';
-import {saveUpdateDraft,restoreUpdateDraft,readUpdateView} from './drafts.mjs';
+import {saveUpdateDraft,restoreUpdateDraft,readUpdateView,createDraftKeeper} from './drafts.mjs';
 const app=document.querySelector('#app');
 let state=initialState(),ready=false,busy=false,transitioning=false;
 const ui={focusSlot:null,libraryType:'all',libraryFavorites:false,customEditor:false,offlineReady:false,storageError:'',updateWaiting:false,updateChecking:false,updateMessage:'联网时会自动检查，也可以手动检查。'};
+let draftStorage;try{draftStorage=sessionStorage;}catch{}
+const drafts=createDraftKeeper(draftStorage);
+let renderedContext=null;
+let draftWarning=false;
+const discardedDrafts=new Set();
+const draftContext=()=>{const slot=currentSlot(state.session||{slots:[]},ui.focusSlot);return {hash:location.hash,session:state.session?.id||null,slot:slot?.id||null,card:slot?.card?.id||null,revision:state.revision};};
+function captureDrafts(){const saved=drafts.capture(document,renderedContext,ui,[...discardedDrafts]);if(!saved&&ready&&!draftWarning){draftWarning=true;toast('草稿暂时只能留在当前页，离开前请完成保存。');}return saved;}
+function discardDraft(name){if(renderedContext)drafts.clear(name,renderedContext);discardedDrafts.add(name);}
+document.addEventListener('input',()=>captureDrafts());
+document.addEventListener('change',()=>captureDrafts());
+window.addEventListener('pagehide',()=>captureDrafts());
 try{ui.swipeSeen=localStorage.getItem('citywalk-swipe-seen')==='1';}catch{}
 const channel=typeof BroadcastChannel!=='undefined'?new BroadcastChannel('citywalk-state'):null;
 const route=()=>{const[name,id]=location.hash.slice(1).split('/');return{name:name||'home',id};};
@@ -32,10 +43,10 @@ function skinsDialog(){
  d.addEventListener('click',async e=>{if(e.target.closest('[data-close]')){d.close();return;}const b=e.target.closest('[data-theme-choice]');if(!b||b.disabled||busy)return;try{await chooseTheme(b.dataset.themeChoice);}catch(err){toast(err.message);}});
  d.showModal();
 }
-function render(){gestures?.cancel();applyTheme();const{name,id}=route();app.innerHTML=renderView(state,ui,name,id);syncUpdateUI();}
+function render(){captureDrafts();discardedDrafts.clear();gestures?.cancel();applyTheme();const{name,id}=route();app.innerHTML=renderView(state,ui,name,id);renderedContext=draftContext();drafts.restore(document,renderedContext);syncUpdateUI();}
 async function mutate(fn){if(busy)throw Error('正在保存，请稍等一下。');busy=true;try{const r=await updateState(fn);state=r.state;ui.storageError='';channel?.postMessage(state.revision);return r.result;}catch(e){if(/存储|保存|读取|中断/.test(e.message||''))ui.storageError=e.message;throw e;}finally{busy=false;}}
 function confirmBox(title,text,yes='确认'){return new Promise(resolve=>{const d=document.createElement('dialog');d.className='dialog';d.innerHTML=`<h2>${esc(title)}</h2><p>${esc(text)}</p><div class="actions"><button class="btn outline" data-choice="no">先不改</button><button class="btn" data-choice="yes">${esc(yes)}</button></div>`;document.body.append(d);let settled=false;const end=v=>{if(settled)return;settled=true;d.close();d.remove();resolve(v);};d.addEventListener('cancel',e=>{e.preventDefault();end(false);});d.addEventListener('click',e=>{const choice=e.target.closest('[data-choice]')?.dataset.choice;if(choice)end(choice==='yes');});d.showModal();});}
-function filtersDialog(){if(!state.session)return;const d=document.createElement('dialog');d.className='dialog';d.innerHTML=filterForm(state.session);document.body.append(d);d.querySelector('[data-close]').onclick=()=>d.close();d.addEventListener('close',()=>d.remove(),{once:true});d.showModal();}
+function filtersDialog(){if(!state.session)return;const d=document.createElement('dialog');d.className='dialog';d.innerHTML=filterForm(state.session);document.body.append(d);drafts.restore(document,draftContext());d.querySelector('[data-close]').onclick=()=>d.close();d.addEventListener('close',()=>d.remove(),{once:true});d.showModal();}
 const gestures=installCardGestures(app,{
  enabled:()=>ready&&!busy&&!transitioning&&themeOf(state)==='adventure'&&!state.session?.pausedAt&&!document.querySelector('dialog[open]'),
  commit:async(action,data)=>{const ok=await performCardAction(action,data);if(ok){ui.swipeSeen=true;try{localStorage.setItem('citywalk-swipe-seen','1');}catch{}app.querySelector('.swipe-guide')?.remove();}return ok;}
@@ -48,27 +59,24 @@ async function performCardAction(action,d){
  const animated=themeOf(state)==='adventure';
  const before=state.session?score(state.session).total:0;
  const previousFocus=document.activeElement;
- const restoreFocus=oldCard?.contains(previousFocus);
+ const restoreFocus=oldCard?.contains(previousFocus)||['complete','replace'].includes(previousFocus?.dataset?.action);
  let exitAnimation;
  transitioning=true;
  try{
   const changed=await mutate(s=>action==='replace'?replaceCard(s,d.session,d.slot,d.card):complete(s,d.session,d.slot,d.card,input?Number(input.value):0));
   if(action==='complete'&&!changed)return false;
+  discardDraft('actual-cost');
   if(action==='complete')ui.focusSlot=null;
   // Persist first. A failed save must never animate a successful decision.
   if(animated)exitAnimation=await animateCardExit(oldCard,action);
-  if(animated&&action==='complete'){
-   // Replace the departed card before opening the reward: its offscreen transform
-   // must not widen the document or leave stale points behind the modal.
-   render();exitAnimation?.cancel();exitAnimation=null;window.scrollTo({top:0,behavior:'instant'});
-   await showCompletion({points:score(state.session).total-before,scoring:state.session.scoring,milestone:rewardMilestone(state.session,before)});
-  }
   // A successful write remains successful even if a subsequent refresh cannot read.
   try{state=await readState();}catch{}
   render();
+  exitAnimation?.cancel();exitAnimation=null;
   window.scrollTo({top:0,behavior:'instant'});
   if(animated){app.querySelector('.task-card')?.classList.add('card-enter');if(state.session&&score(state.session).total>before)app.querySelector('.score-value')?.classList.add('score-pop');}
-  if(restoreFocus){const next=app.querySelector('.task-card h2')||app.querySelector('main h1');next?.setAttribute('tabindex','-1');next?.focus({preventScroll:true});}
+  if(restoreFocus){const next=app.querySelector('.card-reverse')||app.querySelector('.task-card h2')||app.querySelector('main h1');if(next?.tagName!=='BUTTON')next?.setAttribute('tabindex','-1');next?.focus({preventScroll:true});}
+  if(animated&&action==='complete')await showCompletion({points:score(state.session).total-before,scoring:state.session.scoring,milestone:rewardMilestone(state.session,before)});
   const gained=state.session?score(state.session).total-before:0;
   if(action==='replace')toast('已换卡');
   else if(!animated)toast(gained>0?`任务完成 · +${gained} 分`:'任务完成');
@@ -102,19 +110,18 @@ case'check-update':await updater.check(true);return;
 case'apply-update':await applyUpdate();return;
 }render();}catch(e){toast(e.message||'刚才的操作没有成功，请重试。');if(ui.storageError)render();}});
 document.addEventListener('submit',async event=>{const f=event.target;if(!['setup-form','finish-form','reward-form','card-form','filters-form'].includes(f.id))return;event.preventDefault();if(busy||transitioning||!f.reportValidity())return;const data=new FormData(f),submit=f.querySelector('[type="submit"]');submit.disabled=true;try{switch(f.id){
-case'setup-form':await mutate(s=>newSession(s,{mode:data.get('mode'),place:data.get('place'),budget:Number(data.get('budget')),scoring:data.has('scoring'),rewards:s.preferences.rewards}));ui.focusSlot=null;go('walk');break;
-case'finish-form':{const before=score(state.session).total;const id=await mutate(s=>finish(s,f.dataset.session,{name:data.get('name'),memory:data.get('memory'),closing:data.has('closing')}));go(`detail/${id}`);toast('记录已保存');const saved=state.history.find(h=>h.id===id),milestone=rewardMilestone(saved,before);if(milestone){transitioning=true;try{await showCompletion({points:score(saved).total-before,milestone});}finally{transitioning=false;}}break;}
-case'reward-form':await mutate(s=>{s.preferences.rewards=[0,1,2].map(i=>String(data.get(`reward${i}`)).trim().slice(0,80)||REWARDS[i]);});toast('奖励已保存，下局生效');break;
-case'card-form':{const card={id:'custom-'+uid(),type:data.get('type'),text:String(data.get('text')).trim(),note:String(data.get('note')).trim(),minutes:Number(data.get('minutes')),cost:Number(data.get('cost')),place:data.get('place'),source:'custom'};validateCustomCard(card);await mutate(s=>{if(s.customCards.length>=500)throw Error('自定义卡片已达到500张上限。');s.customCards.push(card);});ui.customEditor=false;ui.libraryType='all';ui.libraryFavorites=false;toast('卡片已添加');break;}
-case'filters-form':await mutate(s=>{const se=activeSession(s,f.dataset.session);const budget=Number(data.get('budget')),place=data.get('place');if(!Number.isFinite(budget)||budget<0||budget>10000||!['both','indoor','outdoor'].includes(place))throw Error('请检查预算和场景。');se.budget=budget;se.place=place;});f.closest('dialog').close();toast('筛选已更新');break;
+case'setup-form':await mutate(s=>newSession(s,{mode:data.get('mode'),place:data.get('place'),budget:Number(data.get('budget')),scoring:data.has('scoring'),rewards:s.preferences.rewards}));discardDraft('setup-form');ui.focusSlot=null;go('walk');break;
+case'finish-form':{const before=score(state.session).total;const id=await mutate(s=>finish(s,f.dataset.session,{name:data.get('name'),memory:data.get('memory'),closing:data.has('closing')}));discardDraft('finish-form');go(`detail/${id}`);toast('记录已保存');const saved=state.history.find(h=>h.id===id),milestone=rewardMilestone(saved,before);if(milestone){transitioning=true;try{await showCompletion({points:score(saved).total-before,milestone});}finally{transitioning=false;}}break;}
+case'reward-form':await mutate(s=>{s.preferences.rewards=[0,1,2].map(i=>String(data.get(`reward${i}`)).trim().slice(0,80)||REWARDS[i]);});discardDraft('reward-form');toast('奖励已保存，下局生效');break;
+case'card-form':{const card={id:'custom-'+uid(),type:data.get('type'),text:String(data.get('text')).trim(),note:String(data.get('note')).trim(),minutes:Number(data.get('minutes')),cost:Number(data.get('cost')),place:data.get('place'),source:'custom'};validateCustomCard(card);await mutate(s=>{if(s.customCards.length>=500)throw Error('自定义卡片已达到500张上限。');s.customCards.push(card);});discardDraft('card-form');ui.customEditor=false;ui.libraryType='all';ui.libraryFavorites=false;toast('卡片已添加');break;}
+case'filters-form':await mutate(s=>{const se=activeSession(s,f.dataset.session);const budget=Number(data.get('budget')),place=data.get('place');if(!Number.isFinite(budget)||budget<0||budget>10000||!['both','indoor','outdoor'].includes(place))throw Error('请检查预算和场景。');se.budget=budget;se.place=place;});discardDraft('filters-form');f.closest('dialog').close();toast('筛选已更新');break;
 }render();}catch(e){toast(e.message||'保存失败，请重试。');if(ui.storageError){const p=document.createElement('p');p.className='storage-error';p.textContent=ui.storageError;f.prepend(p);}}finally{submit.disabled=false;}});
 async function exportBackup(){const latest=await readState();const blob=new Blob([JSON.stringify(latest,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`一起走走-备份-${new Date().toISOString().slice(0,10)}.json`;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);toast('备份已生成，请在下载文件中确认保存。');}
-app.addEventListener('change',async e=>{if(e.target.id!=='backup-file')return;const file=e.target.files[0];if(!file)return;try{if(file.size>5*1024*1024)throw Error('备份文件超过5MB，请选择有效的文字备份。');let raw;try{raw=JSON.parse(await file.text());}catch{throw Error('文件不是有效的JSON备份。');}const clean=validateBackup(raw);if(!await confirmBox('用备份替换本机记录？',`备份有 ${clean.history.length} 段历史、${clean.customCards.length} 张自定义卡${clean.session?'和一局进行中的散步':''}。当前记录将被替换。`,'导入并替换'))return;await mutate(s=>{const revision=s.revision;Object.assign(s,clean,{revision});});ui.focusSlot=null;render();toast('备份已恢复到这部设备。');}catch(e){toast(e.message);}finally{e.target.value='';}});
+app.addEventListener('change',async e=>{if(e.target.id!=='backup-file')return;const file=e.target.files[0];if(!file)return;try{if(file.size>5*1024*1024)throw Error('备份文件超过5MB，请选择有效的文字备份。');let raw;try{raw=JSON.parse(await file.text());}catch{throw Error('文件不是有效的JSON备份。');}const clean=validateBackup(raw);if(!await confirmBox('用备份替换本机记录？',`备份有 ${clean.history.length} 段历史、${clean.customCards.length} 张自定义卡${clean.session?'和一局进行中的散步':''}。当前记录将被替换。`,'导入并替换'))return;await mutate(s=>{const revision=s.revision;Object.assign(s,clean,{revision});});drafts.clearAll();renderedContext=null;ui.focusSlot=null;render();toast('备份已恢复到这部设备。');}catch(e){toast(e.message);}finally{e.target.value='';}});
 window.addEventListener('hashchange',()=>{if(ready)render();});
 channel?.addEventListener('message',async()=>{if(transitioning)return;try{state=await readState();applyTheme();if(!document.querySelector('dialog[open]')&&!['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName))render();else toast('记录在另一页有更新，当前输入为你保留。');}catch(e){toast(e.message);}});
-document.addEventListener('visibilitychange',async()=>{if(document.visibilityState==='visible'&&ready&&!busy&&!transitioning){try{state=await readState();applyTheme();if(['walk','home','history','detail'].includes(route().name))render();}catch(e){toast(e.message);}}});
-setInterval(()=>{const se=state.session;if(!se||route().name!=='walk')return;const clock=document.querySelector('[data-elapsed]');if(clock)clock.textContent=timeText(elapsed(se));const due=document.querySelector('[data-due]');if(due)due.textContent=dueText(se,currentSlot(se,ui.focusSlot));},15000);
-const draftContext=()=>({hash:location.hash,session:state.session?.id||null,card:currentSlot(state.session||{slots:[]},ui.focusSlot)?.card?.id||null,revision:state.revision});
+document.addEventListener('visibilitychange',async()=>{if(document.hidden){captureDrafts();return;}if(ready&&!busy&&!transitioning){try{state=await readState();applyTheme();if(['walk','home','history','detail'].includes(route().name))render();}catch(e){toast(e.message);}}});
+setInterval(()=>{const se=state.session;if(document.hidden||!se||route().name!=='walk')return;const clock=document.querySelector('[data-elapsed]');if(clock)clock.textContent=timeText(elapsed(se));const due=document.querySelector('[data-due]');if(due)due.textContent=dueText(se,currentSlot(se,ui.focusSlot));},15000);
 function syncUpdateUI(){
  document.querySelectorAll('[data-update-status]').forEach(el=>el.textContent=ui.updateMessage);
  document.querySelectorAll('[data-current-version]').forEach(el=>el.textContent=RELEASE);
@@ -141,5 +148,5 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 setInterval(()=>{if(document.visibilityState==='visible')updater.check();},15*60*1000);
 let registered=false;
 function registerAgentTools(){const ctx=document.modelContext;if(!ctx?.registerTool||registered)return;registered=true;const lifecycle=new AbortController();window.addEventListener('pagehide',()=>lifecycle.abort(),{once:true});const list=[{name:'read_citywalk_state',description:'Read the current shared-phone walk, score and current card without altering records.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:true},execute(input={}){if(Object.keys(input).length)throw Error('No arguments accepted');const se=state.session;return se?{id:se.id,mode:se.mode,score:score(se),paused:!!se.pausedAt,current:currentSlot(se,ui.focusSlot)}:{active:false,historyCount:state.history.length};}},{name:'draw_citywalk_card',description:'Draw a card in the active walk using the same filters and deduplication as the interface. Does not mark it complete.',inputSchema:{type:'object',properties:{type:{type:'string',enum:['scene','talk','event']}},additionalProperties:false},annotations:{readOnlyHint:false,untrustedContentHint:true},async execute(input={}){if(transitioning)throw Error('Wait for the current card');if(Object.keys(input).some(k=>k!=='type')||(input.type&&!TYPES[input.type]))throw Error('Invalid card type');if(!state.session)throw Error('Start a walk in the interface first');const se=state.session,x=currentSlot(se,ui.focusSlot);if(x&&x.status!=='waiting')throw Error('Current card must be finished or skipped first');if(!x&&!input.type)throw Error('Choose a card type');ui.focusSlot=await mutate(s=>draw(s,se.id,x?.id,input.type));go('walk');render();return{card:state.session.slots.find(x=>x.id===ui.focusSlot).card};}}];for(const tool of list){try{Promise.resolve(ctx.registerTool(tool,{signal:lifecycle.signal})).catch(()=>{});}catch{}}}
-async function boot(){try{state=await readState();ready=true;ui.storageError='';try{Object.assign(ui,readUpdateView(sessionStorage));}catch{}render();try{restoreUpdateDraft(document,sessionStorage,draftContext());}catch{}registerAgentTools();prepareOffline();}catch(e){ready=false;ui.storageError=e.message;app.innerHTML=`<div class="shell"><div class="panel"><h1>先把回忆安顿好</h1><p>${esc(e.message)}</p><p>为避免记录丢失，暂时没有开始新一局。请使用普通浏览窗口，检查网站存储权限后重试。</p>${button('重新打开','reload','','block')}</div></div>`;}}
+async function boot(){try{state=await readState();ready=true;ui.storageError='';Object.assign(ui,drafts.readView(draftContext()));try{Object.assign(ui,readUpdateView(sessionStorage));}catch{}render();try{restoreUpdateDraft(document,sessionStorage,draftContext());}catch{}registerAgentTools();prepareOffline();}catch(e){ready=false;ui.storageError=e.message;app.innerHTML=`<div class="shell"><div class="panel"><h1>先把回忆安顿好</h1><p>${esc(e.message)}</p><p>为避免记录丢失，暂时没有开始新一局。请使用普通浏览窗口，检查网站存储权限后重试。</p>${button('重新打开','reload','','block')}</div></div>`;}}
 await boot();

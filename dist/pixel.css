@@ -23,29 +23,6 @@
 [data-theme=adventure] .dialog::backdrop{background:#17354d66}
 [data-theme=adventure] #toast{background:var(--ink);color:var(--white)}
 [data-theme=adventure] #toast.completion-feedback{background:#e7f0e7;color:#245444;border-color:#649581}
-.card-stage{--left-choice:0;--right-choice:0;max-width:440px;padding:8px 0 0}
-.card-back{inset:16px 8px 82px;background:#fff8e9 url('./card-back.webp') center/cover;border:2px solid var(--ink);border-radius:5px}
-[data-theme=adventure] .task-card{padding:10px;margin-bottom:12px;min-height:0;border:2px solid var(--ink);border-top:2px solid var(--ink);border-radius:6px;box-shadow:4px 5px 0 #17354d18;background:var(--white);z-index:1}
-.card-heading{padding:3px 4px 10px}
-.card-heading .tag{border:0;background:transparent;padding:3px 0;font-weight:700}
-.task-art{display:block;width:100%;height:auto;aspect-ratio:3/4;object-fit:contain;image-rendering:pixelated;border-radius:2px;pointer-events:none}
-.shell[data-page=walk] .task-art{height:clamp(150px,calc(100svh - 560px),300px);aspect-ratio:auto;background:#e9f0ed}
-.shell[data-page=walk] .brand{margin-bottom:12px;padding-bottom:10px}
-.shell[data-page=walk] .page-head{margin-bottom:10px}
-.shell[data-page=walk] .page-head .eyebrow{margin-bottom:2px;font-size:.75rem}
-.shell[data-page=walk] .page-head h1{font-size:1.35rem}
-.shell[data-page=walk] .score-bar{padding:8px 10px;margin-bottom:10px}
-.shell[data-page=walk] .score-value{font-size:1.5rem}
-.task-copy{padding:0 8px 8px}
-[data-theme=adventure] .task-card h2{font-size:clamp(1.15rem,5vw,1.45rem);line-height:1.45;margin:16px 0 10px}
-.task-note{font-size:.9375rem;line-height:1.6;margin:0 0 10px;color:var(--ink)}
-.task-meta{font-size:.8125rem;gap:12px;margin-bottom:0}
-.card-options{margin-top:8px;font-size:.8125rem}
-.card-options summary{color:var(--muted);font-weight:400;text-align:right}
-.card-options .actions{padding:8px 0;gap:8px}
-.draw-card-art{display:flex;justify-content:center;padding:10px;background:var(--paper)}
-.draw-card-art img{display:block;width:65%;height:auto;max-height:340px;object-fit:contain;image-rendering:pixelated}
-.shell[data-page=walk] .draw-card-art img{max-height:200px}
 .swipe-reveal{position:absolute;top:15%;bottom:20%;width:48%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;border:2px solid currentColor;border-radius:5px;font-size:2rem;pointer-events:none;z-index:0}
 .swipe-reveal strong{font-size:1.2rem}.swipe-reveal span{font-size:.8125rem;visibility:hidden}
 .reveal-left{right:0;background:#fae9da;color:#8d4e32;opacity:var(--left-choice)}

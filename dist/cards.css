@@ -1,10 +1,10 @@
 /* Shared card interactions; theme art can be added independently. */
 body{overflow-x:clip}
-.card-stage{position:relative;isolation:isolate;max-width:480px;margin:0 auto 26px;padding-top:8px}
-.card-back{position:absolute;inset:8px 10px 68px;background:repeating-linear-gradient(45deg,#263b40 0 12px,#203237 12px 24px);border:1px solid #6c846f;border-radius:8px;z-index:-1;pointer-events:none}
+.card-stage{--left-choice:0;--right-choice:0;position:relative;isolation:isolate;margin:0 auto 26px}
+.card-back{position:absolute;z-index:-1;pointer-events:none}
 .card-back-far{transform:rotate(-3deg) translateY(7px)}
 .card-back-near{transform:rotate(2deg) translateY(4px)}
-[data-theme=adventure] .task-card{position:relative;--left-choice:0;--right-choice:0;transform-origin:50% 80%;transition:transform 280ms cubic-bezier(.2,.85,.2,1);animation:none;margin-bottom:18px;min-height:280px;box-shadow:inset 0 0 0 4px var(--white),inset 0 0 0 5px #3b4d55,0 12px 28px #0004}
+[data-theme=adventure] .task-card{--left-choice:0;--right-choice:0;transition:transform 280ms cubic-bezier(.2,.85,.2,1);animation:none}
 .task-card[data-swipe-card]{touch-action:pan-y pinch-zoom;cursor:grab;user-select:none;-webkit-user-select:none}
 .task-card.is-dragging{transition:none;cursor:grabbing;will-change:transform}
 .task-card input{user-select:text;-webkit-user-select:text}

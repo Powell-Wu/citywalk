@@ -1,9 +1,21 @@
-const CACHE='citywalk-static-r-92978b72c0f1';
-const FILES=['./','./app.mjs','./art-challenge.webp','./art-cooperate.webp','./art-discover.webp','./art-explore.webp','./art-photo.webp','./art-shop.webp','./art-sound.webp','./art-talk.webp','./art-track.webp','./art.mjs','./card-back.webp','./card-object.css','./cards.css','./cards.mjs','./chest-closed.webp','./chest-open.webp','./collection-view.mjs','./core.mjs','./deck-pattern.svg','./drafts.mjs','./explorer-badge.webp','./icon-180.png','./icon-192.png','./icon-512.png','./icon-maskable.png','./index.html','./journey-departure.webp','./journey-keepsake.webp','./journey-view.mjs','./manifest.webmanifest','./pixel.css','./rewards.mjs','./storage.mjs','./story-event.webp','./story-scene.webp','./story-talk.webp','./style.css','./swipe.mjs','./task-view.mjs','./themes.mjs','./updates.mjs','./views.mjs','./release.mjs'];
+const CACHE='citywalk-static-r-4bf7cbb6ae14';
+const FILES=['./','./app.mjs','./art-challenge.webp','./art-cooperate.webp','./art-discover.webp','./art-explore.webp','./art-photo.webp','./art-shop.webp','./art-sound.webp','./art-talk.webp','./art-track.webp','./art.mjs','./card-back.webp','./card-object.css','./cards.css','./cards.mjs','./chest-closed.webp','./chest-open.webp','./collection-view.mjs','./core.mjs','./deck-pattern.svg','./drafts.mjs','./explorer-badge.webp','./icon-180.png','./icon-192.png','./icon-512.png','./icon-maskable.png','./index.html','./journey-departure.webp','./journey-keepsake.webp','./journey-view.mjs','./manifest.webmanifest','./pixel.css','./rewards.mjs','./storage.mjs','./style.css','./swipe.mjs','./task-view.mjs','./themes.mjs','./updates.mjs','./views.mjs','./release.mjs'];
 const absolute=path=>new URL(path,self.registration.scope).href;
 self.addEventListener('install',event=>event.waitUntil((async()=>{
  const cache=await caches.open(CACHE);
- try {const entries=await Promise.all(FILES.map(async path=>{const request=new Request(absolute(path),{cache:'reload'}),response=await fetch(request);if(!response.ok||response.redirected)throw Error('Offline resource unavailable');const type=response.headers.get('content-type')||'';if((path.endsWith('.mjs')||path.endsWith('.js'))&&!/javascript/.test(type))throw Error('Invalid script response');return[request,response];}));await Promise.all(entries.map(([request,response])=>cache.put(request,response)));await cache.put(absolute('./offline-ready'),new Response('ready'));}catch(e){await caches.delete(CACHE);throw e;}
+ try {
+  const entries=await Promise.all(FILES.map(async path=>{
+   const request=new Request(absolute(path),{cache:'reload'}),response=await fetch(request);
+   if(!response.ok||response.redirected)throw Error('Offline resource unavailable');
+   const type=response.headers.get('content-type')||'';
+   if((path.endsWith('.mjs')||path.endsWith('.js'))&&!/javascript/.test(type))throw Error('Invalid script response');
+   // Drain each download before waiting for other headers, so a limited pool
+   // of persistent HTTP connections cannot stall on unread response bodies.
+   const copy=response.clone();await response.arrayBuffer();return[request,copy];
+  }));
+  await Promise.all(entries.map(([request,response])=>cache.put(request,response)));
+  await cache.put(absolute('./offline-ready'),new Response('ready'));
+ }catch(e){await caches.delete(CACHE);throw e;}
 })()));
 self.addEventListener('activate',event=>event.waitUntil((async()=>{for(const key of await caches.keys())if(key.startsWith('citywalk-static-')&&key!==CACHE)await caches.delete(key);await self.clients.claim();for(const client of await self.clients.matchAll())client.postMessage({type:'CACHE_READY'});})()));
 self.addEventListener('message',event=>{if(event.data?.type==='SKIP_WAITING')self.skipWaiting();if(event.data?.type==='CHECK_CACHE')event.source?.postMessage({type:'CACHE_READY'});});
