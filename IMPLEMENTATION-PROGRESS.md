@@ -27,7 +27,7 @@
 
 当前版本25组 Edge 154.0.4258.62 和25组 Chromium 156.0.8078.4 浏览器验收全部通过，pageerrors为空。Edge 当前结果写入 `test-results/migration-20261009/results.json`，Chromium 写入 `test-results/chromium-20261009/results.json`；C 阶段独立结果为 `results-C.json`。失败诊断文件可能是历史失败快照，以带内容版本的最终 results.json 为准。所有截图和下载样本为隔离夹具，不含用户存档。
 
-首次发布提交 de682b1 的 Linux CI 通过依赖重装、类型、69项业务测试、构建和资源检查，生成与 Windows 相同的 r-4a080efcb926。浏览器脚本在首次完成的盖章断言超时，部署被阻止（Actions 37919824908）。脚本原先在翻牌后固定等待380ms，现改为等待页面 aria-busy=false 才操作，保留盖章和事务结果断言；CI 失败时上传隔离截图与诊断，便于核对实际原因。后续上线仍需修复提交的 build/deploy 成功。
+首次发布提交 de682b1 的 Linux CI 通过依赖重装、类型、69项业务测试、构建和资源检查，生成与 Windows 相同的 r-4a080efcb926。首次完成的盖章断言超时，部署被阻止（Actions 37919824908）；改为等待 aria-busy=false 后，Actions 37920361159 仍在同处超时。第二次失败诊断确认任务已提交、revision为3、首卡done且2分，worker已控制且激活，页面无错误或schema阻挡。脚本进一步在点击前于浏览器内部观察短暂反馈，并断言其文字与持续至少80ms的可见状态，保存 completion-evidence.json，避免420ms状态消失后才开始外部等待。CI失败保留隔离截图与诊断；上线仍需最终修复提交的 build/deploy 成功。
 
 补充审计修复了长标题需要展开才能读全、卸载后确认弹窗和异步反馈残留、收藏筛选刷新丢失。超长标题现在自动显示完整任务；独立挂载/卸载测试确认弹窗取消、hash/input/visibility监听归零，重新挂载不增长，已提交事务在卸载后仍保留而不产生旧页面反馈。两浏览器均通过这4项生命周期检查，证据为 `test-results/lifecycle-20261009/results.json` 和 `test-results/chromium-20261009/lifecycle/results.json`。缓存清理单测进一步验证未知标签保留旧资源、已知标签固定实际版本、旧标签关闭后再清理。
 

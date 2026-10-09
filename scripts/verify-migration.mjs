@@ -11,12 +11,23 @@ const results=[],errors=[];let activePage;
 const record=(test,details={})=>{results.push({test,...details});console.log('PASS '+test);};
 async function read(page){return page.evaluate(()=>new Promise((resolve,reject)=>{const request=indexedDB.open('citywalk-for-two',1);request.onsuccess=()=>{const db=request.result,tx=db.transaction('state','readonly'),get=tx.objectStore('state').get('current');get.onsuccess=()=>{resolve(get.result);db.close();};get.onerror=()=>reject(get.error);};request.onerror=()=>reject(request.error);}));}
 async function seed(page,state){await page.evaluate(state=>new Promise((resolve,reject)=>{const request=indexedDB.open('citywalk-for-two',1);request.onsuccess=()=>{const db=request.result,tx=db.transaction('state','readwrite');tx.objectStore('state').put(state,'current');tx.oncomplete=()=>{db.close();resolve();};tx.onerror=()=>reject(tx.error);};request.onerror=()=>reject(request.error);}),state);}
-async function fresh(viewport={width:390,height:844},extra={}){const context=await browser.newContext({viewport,...extra}),page=await context.newPage();activePage=page;page.on('pageerror',error=>errors.push(error.message));page.setDefaultTimeout(15000);await page.goto(base);await page.getByRole('button',{name:'领取通行证',exact:true}).waitFor();return {context,page};}
+async function fresh(viewport={width:390,height:844},extra={}){const context=await browser.newContext({viewport,...extra}),page=await context.newPage();activePage=page;page.on('pageerror',error=>errors.push(error.message));page.setDefaultTimeout(15000);await page.bringToFront();await page.goto(base);await page.getByRole('button',{name:'领取通行证',exact:true}).waitFor();return {context,page};}
 async function start(page){await page.getByRole('button',{name:'领取通行证',exact:true}).click();await page.getByRole('button',{name:'出发',exact:true}).click();await page.locator('.card-reverse').waitFor();}
 async function readyForAction(page){await page.waitForFunction(()=>document.querySelector('main')?.getAttribute('aria-busy')==='false');}
 async function reveal(page){await readyForAction(page);await page.locator('.card-reverse').click();await page.locator('[data-swipe-card]').waitFor();await readyForAction(page);}
 async function options(page){await readyForAction(page);const details=page.locator('.card-options');if(await details.getAttribute('open')===null)await details.locator('summary').click();}
 async function dismiss(page){const dismiss=page.locator('[data-dismiss]');if(await dismiss.isVisible())await dismiss.click();}
+async function observeCompletion(page){
+ // Observe inside the browser before the click: a 420ms status may disappear
+ // before a loaded CI runner handles the next Playwright protocol response.
+ await page.evaluate(()=>{
+  globalThis.completionEvidence=new Promise(resolve=>{
+   let ended=false,observing=false;const finish=result=>{if(ended)return;ended=true;clearTimeout(timer);observer.disconnect();resolve(result);};
+   const observer=new MutationObserver(()=>{const stamp=document.querySelector('.completion-stamp');if(!stamp||observing)return;observing=true;requestAnimationFrame(()=>{const started=performance.now();setTimeout(()=>requestAnimationFrame(()=>{const box=stamp.getBoundingClientRect(),style=getComputedStyle(stamp);finish({text:stamp.textContent,visible:stamp.isConnected&&box.width>0&&box.height>0&&style.visibility==='visible'&&style.display!=='none',observedMs:performance.now()-started,visibility:document.visibilityState});}),80);});});
+   const timer=setTimeout(()=>finish({error:'completion feedback was not observed'}),10000);observer.observe(document.body,{childList:true,subtree:true});
+  });
+ });
+}
 try{
  if(process.env.CITYWALK_E2E_FILTER!=='upgrade'){
  for(const viewport of [{width:320,height:700},{width:390,height:844},{width:844,height:390},{width:1100,height:850}]){
@@ -25,7 +36,7 @@ try{
  }
  {
   const {context,page}=await fresh();await page.screenshot({path:`${output}/home.png`});await start(page);await page.screenshot({path:`${output}/card-back.png`});
-  for(let i=0;i<4;i++){await reveal(page);await options(page);await page.getByRole('button',{name:'完成',exact:true}).click();if(i===0){await page.locator('.completion-stamp').waitFor();await page.screenshot({path:`${output}/ordinary-complete.png`});}await page.waitForTimeout(320);if(await page.locator('.reward-dialog').isVisible())await page.screenshot({path:`${output}/milestone.png`});await dismiss(page);await page.waitForTimeout(100);}
+  for(let i=0;i<4;i++){await reveal(page);await options(page);if(i===0)await observeCompletion(page);await page.getByRole('button',{name:'完成',exact:true}).click();if(i===0){const proof=await page.evaluate(()=>globalThis.completionEvidence);assert(proof.visible,JSON.stringify(proof));assert(proof.observedMs>=80);assert.match(proof.text,/任务完成.*\+2/);await fs.writeFile(output+'/completion-evidence.json',JSON.stringify(proof,null,2));if(await page.locator('.completion-stamp').isVisible())await page.screenshot({path:`${output}/ordinary-complete.png`});}await page.waitForTimeout(320);if(await page.locator('.reward-dialog').isVisible())await page.screenshot({path:`${output}/milestone.png`});await dismiss(page);await page.waitForTimeout(100);}
   assert.equal((await read(page)).session.slots.filter(slot=>slot.status==='done').length,4);await page.getByRole('button',{name:'一起收尾',exact:true}).click();await page.locator('#walk-name').fill('Svelte 隔离旅程');await page.locator('#memory').fill('在街角看见了两扇蓝色窗户');await page.locator('[name="closing"]').check();await page.getByRole('button',{name:'保存记录',exact:true}).click();await page.waitForTimeout(300);await dismiss(page);await page.locator('.journey-record').waitFor();assert.equal((await read(page)).history[0].name,'Svelte 隔离旅程');await page.screenshot({path:`${output}/recap.png`});await page.reload();await page.locator('.journey-record').waitFor();record('full short journey, closing and reload');await context.close();
  }
  {
