@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {CARDS,initialState,newSession,draw,complete,finish} from '../dist/core.mjs';
-import {TASK_ART,cardArtKey} from '../dist/art.mjs';
-import {rewardMilestone,showCompletion} from '../dist/rewards.mjs';
-import {renderView} from '../dist/views.mjs';
+import {CARDS,initialState,newSession,draw,complete,finish} from '../src/lib/domain/core.mjs';
+import {TASK_ART,cardArtKey} from '../src/lib/ui/art.mjs';
+import {rewardMilestone,showCompletion} from '../src/lib/interactions/rewards.mjs';
+import {renderView} from '../src/lib/ui/views.mjs';
 
 test('every built-in task has a curated illustration; sensory and collaboration cards are not generic routes',()=>{
  assert.deepEqual(Object.keys(TASK_ART).sort(),CARDS.map(c=>c.id).sort());
@@ -19,7 +19,7 @@ test('reward milestones only occur on newly crossed tiers and select highest tie
  assert.equal(rewardMilestone(se,9),null);
  se.closing=true;assert.deepEqual(rewardMilestone(se,7),{points:13,name:se.rewards[2]});
  se.scoring=false;assert.equal(rewardMilestone(se,0),null);
- se.scoring=true;se.mode='free';assert.equal(rewardMilestone(se,0),null);
+ const free=initialState();newSession(free,{...free.preferences,mode:'free'});assert.equal(rewardMilestone(free.session,0),null);
 });
 
 test('milestone dialog safely displays custom reward and waits for dismissal, reduced motion included',async()=>{

@@ -1,0 +1,14 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import {build} from 'vite';
+import {prepareRelease} from './release.mjs';
+import {brand} from '../src/lib/config/brand.ts';
+const root=path.resolve(import.meta.dirname,'..');
+const target=path.join(root,process.env.CITYWALK_BUILD_DIR||'dist');
+if(!['_site','dist'].includes(path.relative(root,target)))throw Error('Unexpected build target');
+await build({root});
+const manifest=JSON.parse(await fs.readFile(path.join(target,'manifest.webmanifest'),'utf8'));
+Object.assign(manifest,{name:brand.title,short_name:brand.shortName,description:brand.description});
+await fs.writeFile(path.join(target,'manifest.webmanifest'),JSON.stringify(manifest,null,2)+'\n');
+const template=await fs.readFile(path.join(root,'src/lib/services/sw-template.js'),'utf8');
+console.log('Content version: '+await prepareRelease(target,{template}));

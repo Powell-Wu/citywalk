@@ -1,10 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {initialState,newSession,draw,complete,setSlotStatus,undo,thresholds,validateBackup} from '../dist/core.mjs';
-import {journeyProgress,rewardPreview,journeyRoute} from '../dist/journey-view.mjs';
-import {renderView} from '../dist/views.mjs';
-import {createDraftKeeper,saveUpdateDraft,restoreUpdateDraft} from '../dist/drafts.mjs';
-import {showCompletion} from '../dist/rewards.mjs';
+import {initialState,newSession,draw,complete,setSlotStatus,undo,thresholds,validateBackup} from '../src/lib/domain/core.mjs';
+import {journeyProgress,rewardPreview,journeyRoute} from '../src/lib/ui/journey-view.mjs';
+import {renderView} from '../src/lib/ui/views.mjs';
+import {createDraftKeeper,saveUpdateDraft,restoreUpdateDraft} from '../src/lib/services/drafts.mjs';
+import {showCompletion} from '../src/lib/interactions/rewards.mjs';
 
 test('route derives current, later and skipped states without changing legacy records; undo recomputes rewards',()=>{
  const s=initialState();newSession(s,s.preferences);const se=s.session;
@@ -40,7 +40,8 @@ test('expense drafts survive rerender, foreground, refresh and revision changes 
  keeper.clear('actual-cost',f.context);f.cost.value='0';keeper.restore(f.doc,f.context);assert.equal(f.cost.value,'0');
 });
 test('closing drafts follow the session, custom editor survives reload, expired drafts are ignored and storage failures keep an in-memory copy',()=>{
- const f=fixture(),keeper=createDraftKeeper(f.storage);keeper.capture(f.doc,f.context,{customEditor:true});f.memory.value='';keeper.restore(f.doc,{...f.context,card:'changed'});assert.equal(f.memory.value,'今天的回忆');
+ const f=fixture(),keeper=createDraftKeeper(f.storage);keeper.capture(f.doc,f.context,{customEditor:true,libraryType:'event',libraryCompleted:true,libraryDisabled:true});f.memory.value='';keeper.restore(f.doc,{...f.context,card:'changed'});assert.equal(f.memory.value,'今天的回忆');
+ assert.deepEqual([keeper.readView(f.context).libraryType,keeper.readView(f.context).libraryCompleted,keeper.readView(f.context).libraryDisabled],['event',true,true]);
  f.memory.value='';keeper.restore(f.doc,{...f.context,session:'other'});assert.equal(f.memory.value,'');
  assert.equal(keeper.readView(f.context).customEditor,true);assert.deepEqual(keeper.readView({...f.context,session:'other'}),{});
  const broken=createDraftKeeper({getItem(){throw Error('blocked');},setItem(){throw Error('full');}});f.cost.value='9';assert.equal(broken.capture(f.doc,f.context),false);f.cost.value='0';broken.restore(f.doc,f.context);assert.equal(f.cost.value,'9');

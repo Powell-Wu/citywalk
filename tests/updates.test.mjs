@@ -3,9 +3,9 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import {createUpdater} from '../dist/updates.mjs';
+import {createUpdater} from '../src/lib/services/updates.mjs';
 import {prepareRelease} from '../scripts/release.mjs';
-import {saveUpdateDraft,restoreUpdateDraft,readUpdateView} from '../dist/drafts.mjs';
+import {saveUpdateDraft,restoreUpdateDraft,readUpdateView} from '../src/lib/services/drafts.mjs';
 
 class Emitter {events={};addEventListener(n,fn){(this.events[n]||=[]).push(fn);}removeEventListener(n,fn){this.events[n]=(this.events[n]||[]).filter(x=>x!==fn);}emit(n){for(const fn of this.events[n]||[])fn();}}
 function fixture(){const sw=new Emitter(),reg=new Emitter();sw.controller={};let updates=0,registers=0,reloads=0;reg.waiting=null;reg.installing=null;reg.update=async()=>{updates++;};sw.register=async()=>{registers++;return reg;};const changes=[];const app=createUpdater({serviceWorker:sw,secure:true,onChange:s=>changes.push(s),reload:()=>reloads++});return {sw,reg,app,changes,get updates(){return updates;},get registers(){return registers;},get reloads(){return reloads;}};}
@@ -49,7 +49,8 @@ test('unsaved inputs and editor state survive a same-context update but never re
  const store=new Map(),storage={getItem:k=>store.get(k),setItem:(k,v)=>store.set(k,v),removeItem:k=>store.delete(k)};
  const input={id:'memory',name:'memory',type:'textarea',value:'今天的小事',form:{id:'finish-form'}};
  const doc={querySelectorAll:()=>[input]},context={hash:'#finish',revision:4};
- saveUpdateDraft(doc,storage,context,{customEditor:true,libraryType:'talk'});assert.equal(readUpdateView(storage).customEditor,true);
+ saveUpdateDraft(doc,storage,context,{customEditor:true,libraryType:'talk',libraryFavorites:true,libraryCompleted:true,libraryDisabled:true});assert.equal(readUpdateView(storage).customEditor,true);
+ assert.deepEqual([readUpdateView(storage).libraryType,readUpdateView(storage).libraryFavorites,readUpdateView(storage).libraryCompleted,readUpdateView(storage).libraryDisabled],['talk',true,true,true]);
  input.value='';restoreUpdateDraft(doc,storage,context);assert.equal(input.value,'今天的小事');
  saveUpdateDraft(doc,storage,context);input.value='新一局';restoreUpdateDraft(doc,storage,{hash:'#finish',revision:5});assert.equal(input.value,'新一局');
 });

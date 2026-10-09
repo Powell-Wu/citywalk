@@ -1,0 +1,160 @@
+{
+  "version": 1,
+  "revision": 7,
+  "theme": "adventure",
+  "session": {
+    "id": "eb92aead-7ffd-473e-a522-b8c4d13a607a",
+    "mode": "short",
+    "place": "both",
+    "budget": 0,
+    "scoring": true,
+    "rewards": [
+      "一起吃份甜品",
+      "由你挑选下次约会",
+      "约好一次喜欢的大餐"
+    ],
+    "startedAt": 1791504180000,
+    "pausedAt": null,
+    "pausedMs": 0,
+    "endedAt": null,
+    "seen": [
+      "scene-01"
+    ],
+    "slots": [
+      {
+        "id": "107f3c79-c54d-4fd1-b88f-1ff401c92dd6",
+        "type": "scene",
+        "status": "active",
+        "card": {
+          "id": "scene-01",
+          "type": "scene",
+          "text": "找一栋最适合当秘密基地的房子",
+          "minutes": 5,
+          "cost": 0,
+          "place": "outdoor",
+          "note": "不必进去，选好后说说它为什么适合。",
+          "source": "original"
+        },
+        "completedAt": null,
+        "spent": 0
+      },
+      {
+        "id": "282d4803-0239-406a-a9d6-a7526758f07d",
+        "type": "talk",
+        "status": "waiting",
+        "card": null,
+        "completedAt": null,
+        "spent": 0
+      },
+      {
+        "id": "f26269f9-39d0-4c94-b689-0ab4ec3d474a",
+        "type": "event",
+        "status": "waiting",
+        "card": null,
+        "completedAt": null,
+        "spent": 0
+      },
+      {
+        "id": "a81c3c80-8c96-4c61-882c-039c02f4f4dd",
+        "type": "talk",
+        "status": "waiting",
+        "card": null,
+        "completedAt": null,
+        "spent": 0
+      }
+    ],
+    "bonuses": {
+      "surprise": false,
+      "laugh": false
+    },
+    "closing": false,
+    "name": "",
+    "memory": ""
+  },
+  "history": [
+    {
+      "id": "8b3368ba-fc7a-4ad6-9c3c-33b85fa0bd95",
+      "mode": "short",
+      "place": "both",
+      "budget": 0,
+      "scoring": true,
+      "rewards": [
+        "一起吃份甜品",
+        "由你挑选下次约会",
+        "约好一次喜欢的大餐"
+      ],
+      "startedAt": 1791504000000,
+      "pausedAt": null,
+      "pausedMs": 0,
+      "endedAt": 1791504120000,
+      "seen": [
+        "scene-01"
+      ],
+      "slots": [
+        {
+          "id": "db02ed9e-34b2-47d9-b9a9-927ccfc36919",
+          "type": "scene",
+          "status": "done",
+          "card": {
+            "id": "scene-01",
+            "type": "scene",
+            "text": "找一栋最适合当秘密基地的房子",
+            "minutes": 5,
+            "cost": 0,
+            "place": "outdoor",
+            "note": "不必进去，选好后说说它为什么适合。",
+            "source": "original"
+          },
+          "completedAt": 1791504060000,
+          "spent": 0
+        },
+        {
+          "id": "d828cc4d-420c-427e-9fa5-95726475c937",
+          "type": "talk",
+          "status": "waiting",
+          "card": null,
+          "completedAt": null,
+          "spent": 0
+        },
+        {
+          "id": "2db091a4-8766-41cc-ac5c-60a4de7cb756",
+          "type": "event",
+          "status": "waiting",
+          "card": null,
+          "completedAt": null,
+          "spent": 0
+        },
+        {
+          "id": "1e368b05-4cd0-4799-b03b-15fe44c05e1f",
+          "type": "talk",
+          "status": "waiting",
+          "card": null,
+          "completedAt": null,
+          "spent": 0
+        }
+      ],
+      "bonuses": {
+        "surprise": false,
+        "laugh": false
+      },
+      "closing": true,
+      "name": "隔离测试：街角同行",
+      "memory": "共同发现了一扇蓝色窗户"
+    }
+  ],
+  "customCards": [],
+  "disabled": [],
+  "favorites": [],
+  "preferences": {
+    "mode": "short",
+    "place": "both",
+    "budget": 0,
+    "scoring": true,
+    "rewards": [
+      "一起吃份甜品",
+      "由你挑选下次约会",
+      "约好一次喜欢的大餐"
+    ]
+  },
+  "offlineReady": false
+}

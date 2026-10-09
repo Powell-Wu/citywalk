@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {initialState,newSession,draw,complete,finish,score} from '../dist/core.mjs';
-import {renderView} from '../dist/views.mjs';
+import {initialState,newSession,draw,complete,finish,score} from '../src/lib/domain/core.mjs';
+import {renderView} from '../src/lib/ui/views.mjs';
 
 function record({scoring=true,mode='short',count=3,closing=true}={}){
  const s=initialState();newSession(s,{...s.preferences,scoring,mode},1000000);

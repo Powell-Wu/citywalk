@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {swipeIntent,swipeThreshold,motionDuration,installCardGestures} from '../dist/swipe.mjs';
+import {swipeIntent,swipeThreshold,motionDuration,installCardGestures} from '../src/lib/interactions/swipe.mjs';
 
 test('swipe needs deliberate horizontal distance; short, vertical, diagonal motion cancels',()=>{
  for(const width of [280,340,430,900]){
@@ -93,7 +93,7 @@ test('grabbing a card drops the deal-in class so the drag transform can apply',(
 // animation keeps the card pinned at "no transform" for the rest of its life.
 // The tilt then never appears even though the drag writes it every frame.
 test('deal-in animation must not fill forwards, or it would pin the card transform',()=>{
- const css=readFileSync(new URL('../dist/cards.css',import.meta.url),'utf8');
+ const css=readFileSync(new URL('../src/styles/motion.css',import.meta.url),'utf8');
  const rule=/\.card-enter\{animation:deal-card[^}]*\}/.exec(css);
  assert.ok(rule,'the deal-in rule should exist in cards.css');
  assert.doesNotMatch(rule[0],/\b(both|forwards)\b/,'a forwards fill would override the drag transform after the deal-in ends');

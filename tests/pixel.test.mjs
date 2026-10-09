@@ -1,21 +1,19 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {existsSync,readFileSync} from 'node:fs';
-import {CARDS,initialState,newSession,draw} from '../dist/core.mjs';
-import {cardArt} from '../dist/art.mjs';
-import {renderView} from '../dist/views.mjs';
-import {showCompletion} from '../dist/rewards.mjs';
+import {CARDS,initialState,newSession,draw} from '../src/lib/domain/core.mjs';
+import {cardArt} from '../src/lib/ui/art.mjs';
+import {renderView} from '../src/lib/ui/views.mjs';
+import {showCompletion} from '../src/lib/interactions/rewards.mjs';
 
-test('task art is stable, all built-in and custom card types resolve to packaged offline assets',()=>{
- const sw=readFileSync(new URL('../dist/sw.js',import.meta.url),'utf8');
+test('task art is stable, all built-in and custom card types resolve to public source assets',()=>{
  const covered=new Set();
  for(const card of [...CARDS,...['scene','talk','event'].map(type=>({type,text:'自定义任务'}))]){
   const art=cardArt(card);assert.deepEqual(cardArt({...card}),art);covered.add(art.src);
-  assert(existsSync(new URL('../dist/'+art.src,import.meta.url)));
-  assert(sw.includes(`'./${art.src}'`));
+  assert(existsSync(new URL('../public/'+art.src,import.meta.url)));
  }
  assert.equal(covered.size,9);
- for(const file of ['card-back.webp','chest-closed.webp','chest-open.webp','explorer-badge.webp'])assert(sw.includes(`'./${file}'`));
+ for(const file of ['card-back.webp','chest-closed.webp','chest-open.webp','explorer-badge.webp'])assert(existsSync(new URL('../public/'+file,import.meta.url)));
 });
 
 test('default task actions are inside collapsed disclosure; paused cards cannot swipe',()=>{

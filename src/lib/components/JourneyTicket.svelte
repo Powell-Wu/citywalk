@@ -1,0 +1,18 @@
+<script lang="ts">
+ import type {Journey} from '../config/types';
+ import {MODES,TYPES,BRANCHES,slotPoints,score,thresholds,spent,elapsed} from '../domain/core.mjs';
+ import {fmtDate,timeText} from '../ui/views.mjs';
+ import {asset} from '../config/assets';
+ import JourneyProgress from './JourneyProgress.svelte';
+ import ScoreBreakdown from './ScoreBreakdown.svelte';
+ let {journey}:{journey:Journey}=$props();
+ let points=$derived(score(journey)),tiers=$derived(journey.scoring?thresholds(journey):[]),tier=$derived(tiers.reduce((best:number,n:number,i:number)=>points.total>=n?i:best,-1));
+ let completed=$derived(journey.slots.filter(item=>item.status==='done')),unfinished=$derived(journey.slots.filter(item=>item.status!=='done'));
+</script>
+<article class="ticket journey-record"><div class="ticket-top"><span>双人冒险 · 旅程存档</span><span>{fmtDate(journey.startedAt)}</span></div><img class="journey-art" src={asset('journey-keepsake.webp')} alt="两人把地图和探险徽章收好，留下这一程的纪念" width="960" height="640" decoding="async"><div class="journey-record-body"><div class="record-heading"><img class="journey-badge" src={asset('explorer-badge.webp')} alt="" width="72" height="72"><div><p class="eyebrow">{MODES[journey.mode].name}</p><h2>{journey.name}</h2></div></div><dl class="journey-stats"><div><dt>完成任务</dt><dd>{points.count}<small> 张</small></dd></div><div><dt>同行时间</dt><dd class="duration">{timeText(elapsed(journey))}</dd></div>{#if journey.scoring}<div><dt>本次积分</dt><dd>{points.total}</dd></div>{/if}</dl><JourneyProgress {journey}/><ScoreBreakdown {journey}/>
+{#if journey.branch}<section class="memory-note" data-branch-recap><h3>{BRANCHES[journey.branch].name}</h3><p>{BRANCHES[journey.branch].recap}</p></section>{/if}
+{#if journey.memory}<section class="memory-note"><h3>想记住的瞬间</h3><p>{journey.memory}</p></section>{/if}
+{#if tiers.length}<section class="journey-loot"><img src={asset(`${tier>=0?'chest-open':'chest-closed'}.webp`)} alt="" width="100" height="100"><div><p class="eyebrow">{tier>=0?'这次的奖励':'奖励进度'}</p><h3>{tier>=0?journey.rewards[tier]:'这次还没到奖励分数'}</h3><p class="help">{tier>=0?`${tiers[tier]} 分档 · 领取这一档奖励`:`已获得 ${points.total} 分 · 第一档 ${tiers[0]} 分`}</p></div></section><details class="reward-tiers"><summary>查看各档奖励</summary>{#each tiers as n,i}<div class={`reward ${points.total>=n?'unlocked':'locked'}`}>{i===tier?'本次奖励':points.total>=n?'已达到':'未达到'} · {n} 分 · {journey.rewards[i]}</div>{/each}<p class="help">按最高达成档领取，不叠加。</p></details>{/if}
+<section class="journey-log"><h3>一起完成的任务 <span class="muted small">{points.count} 张</span></h3>{#if completed.length}<ol class="journey-tasks">{#each completed as slot}<li><div><span class={`tag ${slot.type}`}>{TYPES[slot.type].name}</span>{#if journey.scoring}<span class="task-earned">+{slotPoints(slot,journey)}</span>{/if}</div><p>{slot.card?.text}</p></li>{/each}</ol>{:else}<p class="muted">这次没有完成任务卡，也留下一段同行的时间。</p>{/if}
+{#if journey.scoring}<ul class="journey-bonuses">{#each [[points.trio,'三类集齐'],[journey.bonuses.surprise?journey.rules.bonus:0,'小惊喜'],[journey.bonuses.laugh?journey.rules.bonus:0,'笑出声'],[points.closing,'一起收尾']] as [n,label]}{#if n}<li><span>{label}</span><strong>+{n}</strong></li>{/if}{/each}</ul>{/if}
+{#if unfinished.length}<details class="unfinished-tasks"><summary>途中未完成的任务 · {unfinished.length} 张</summary><ul class="ledger">{#each unfinished as slot}<li><span>{slot.card?.text||`未抽取的${TYPES[slot.type].name}`}</span><small class="muted">{slot.status==='skipped'?'已跳过':slot.status==='later'?'稍后':'未完成'}</small></li>{/each}</ul></details>{/if}</section><p class="footnote">任务花费 ¥{spent(journey)} · 购物预算 ¥{journey.budget}</p></div></article>

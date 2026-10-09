@@ -10,14 +10,15 @@ test('Windows launcher uses ASCII and CRLF so cmd does not misparse lines',()=>{
  assert.match(fs.readFileSync(new URL('../.gitattributes',import.meta.url),'utf8'),/\*\.cmd text eol=crlf/);
 });
 
-function fixture({behind=0,ahead=0,changes=' M dist/cards.mjs',fail='',staged='',message='更新卡片 & echo secret'}={}){
+function fixture({behind=0,ahead=0,changes=' M src/lib/domain/cards.mjs',fail='',staged='',legacyDist='',generatedStaged='',message='更新卡片 & echo secret'}={}){
  const calls=[],logs=[];
  return {calls,logs,options:{ask:async()=>message,log:s=>logs.push(s),open:u=>calls.push(['open',u]),run:(cmd,args)=>{
   calls.push([cmd,...args]);
   if(args[0]===fail)throw Error('simulated failure');
   if(args[0]==='branch')return 'main';
   if(args[0]==='remote')return 'https://github.com/Powell-Wu/citywalk.git';
-  if(args[0]==='diff')return args.includes('--cached')?staged:'';
+  if(args[0]==='diff')return args.some(arg=>arg.startsWith('--diff-filter=ACMRT'))?generatedStaged:args.includes('--cached')?staged:'';
+  if(args[0]==='ls-files')return legacyDist;
   if(args[0]==='rev-list')return `${ahead}\t${behind}`;
   if(args[0]==='status')return changes;
   if(args[0]==='config')return 'Configured identity';
@@ -25,10 +26,16 @@ function fixture({behind=0,ahead=0,changes=' M dist/cards.mjs',fail='',staged=''
  }}};
 }
 test('publish stops before staging or pushing if tests fail or remote is ahead',async()=>{
- for(const params of [{fail:'--test'},{behind:1},{staged:'private.txt\0'}]){
+ for(const params of [{fail:'--test'},{fail:'scripts/build.mjs'},{fail:'scripts/e2e.mjs'},{behind:1},{staged:'private.txt\0'},{staged:'dist/index.html\0',generatedStaged:'dist/index.html'}]){
   const f=fixture(params);await assert.rejects(publish(f.options));
   assert(!f.calls.some(c=>['add','commit','push','open'].includes(c[1])));
  }
+});
+test('migration untracks original dist after all checks, while the generated output is never added',async()=>{
+ const f=fixture({legacyDist:'dist/app.mjs\ndist/index.html'});await publish(f.options);
+ const remove=f.calls.findIndex(call=>call[1]==='rm'),browser=f.calls.findIndex(call=>call[1]==='scripts/e2e.mjs');
+ assert(remove>browser);assert.deepEqual(f.calls[remove],['git','rm','-r','--cached','--','dist']);
+ assert(!f.calls.find(call=>call[1]==='add').includes('dist'));
 });
 test('publish commits the description as one literal argument, then pushes and opens Actions',async()=>{
  const f=fixture();await publish(f.options);

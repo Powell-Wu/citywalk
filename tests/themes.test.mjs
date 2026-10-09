@@ -1,9 +1,9 @@
 import 'fake-indexeddb/auto';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {initialState,newSession,draw,complete,finish,score,validateBackup} from '../dist/core.mjs';
-import {themeOf,setTheme,themePicker} from '../dist/themes.mjs';
-import {readState,updateState} from '../dist/storage.mjs';
+import {initialState,newSession,draw,complete,finish,score,validateBackup} from '../src/lib/domain/core.mjs';
+import {themeOf,setTheme,themePicker} from '../src/lib/ui/themes.mjs';
+import {readState,updateState} from '../src/lib/services/storage.mjs';
 
 test('legacy themes migrate to adventure and unavailable themes cannot be selected',()=>{
  for(const theme of [undefined,'warm','story','adventure']){

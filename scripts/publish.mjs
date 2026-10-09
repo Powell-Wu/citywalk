@@ -5,8 +5,8 @@ import {fileURLToPath, pathToFileURL} from 'node:url';
 import {createInterface} from 'node:readline/promises';
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
-const allowed=['dist','tests','scripts','.github','package.json','package-lock.json','README.md','.gitignore','.gitattributes','publish.cmd'];
-const inScope=file=>allowed.some(p=>file===p||file.startsWith(p+'/'));
+const allowed=['src','public','tests','scripts','.github','package.json','package-lock.json','index.html','vite.config.ts','svelte.config.js','tsconfig.json','README.md','.gitignore','.gitattributes','publish.cmd','GAME-IMPLEMENTATION-BRIEF.md','GAME-QUALITY-PLAN.md','PROJECT-NAMING.md','MIGRATION-INVENTORY.md','IMPLEMENTATION-PROGRESS.md','DEVICE-ACCEPTANCE.md'];
+const inScope=file=>allowed.some(p=>file===p||file.startsWith(p+'/'))||file.startsWith('dist/');
 
 export async function publish({run,ask,log,open}){
  const git=(...args)=>run('git',args);
@@ -15,16 +15,20 @@ export async function publish({run,ask,log,open}){
  if(git('diff','--name-only','--diff-filter=U').trim())throw Error('存在未解决的合并冲突，请先处理。');
  const staged=git('diff','--cached','--name-only','-z').split('\0').filter(Boolean);
  if(staged.some(f=>!inScope(f)))throw Error('暂存区含项目发布范围外的文件，请先检查并取消暂存。');
+ if(git('diff','--cached','--name-only','--diff-filter=ACMRT','--','dist').trim())throw Error('dist 是生成目录，不应暂存产物；只允许迁移时删除旧的受跟踪源码。');
  git('fetch','origin','main');
  const [ahead,behind]=git('rev-list','--left-right','--count','HEAD...origin/main').trim().split(/\s+/).map(Number);
  if(behind)throw Error('GitHub 有本地尚未同步的提交。请先处理本地修改并 git pull --ff-only，然后重试。脚本不会自动合并或覆盖文件。');
- log('正在生成版本、运行测试和检查…');
- run(process.execPath,['scripts/release.mjs'],true);
+ log('正在检查类型、测试、构建与浏览器流程…');
+ run(process.execPath,['node_modules/svelte-check/bin/svelte-check','--tsconfig','./tsconfig.json'],true);
  run(process.execPath,['--test',...fs.readdirSync(path.join(root,'tests')).filter(f=>f.endsWith('.test.mjs')).map(f=>'tests/'+f)],true);
+ run(process.execPath,['scripts/build.mjs'],true);
  run(process.execPath,['scripts/check.mjs'],true);
+ run(process.execPath,['scripts/e2e.mjs'],true);
+ const legacyDist=git('ls-files','--','dist').trim();
  const changes=git('status','--porcelain','--',...allowed).trim();
- if(!changes&&!ahead){log('没有需要提交或推送的修改。');return;}
- if(changes){
+ if(!changes&&!ahead&&!legacyDist){log('没有需要提交或推送的修改。');return;}
+ if(changes||legacyDist){
   log('\n本次提交的文件：\n'+changes);
   const message=(await ask('请输入修改说明（直接回车取消）：')).trim();
   if(!message){log('已取消，未创建提交或推送。');return;}
@@ -33,7 +37,9 @@ export async function publish({run,ask,log,open}){
    let existing='';try{existing=git('config','--get',key).trim();}catch{}
    if(!existing){const value=(await ask(label+'：')).trim();if(!value)throw Error('未填写提交身份，已停止。');git('config','--local',key,value);}
   }
-  git('add','--',...allowed);
+  if(legacyDist)git('rm','-r','--cached','--','dist');
+  // Only existing allowed paths are passed: optional developer docs may be absent.
+  git('add','--',...allowed.filter(file=>fs.existsSync(path.join(root,file))));
   git('commit','-m',message);
  }else log(`发现 ${ahead} 个尚未推送的本地提交，正在重试推送。`);
  git('push','origin','main');
