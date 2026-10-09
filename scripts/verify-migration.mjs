@@ -13,8 +13,9 @@ async function read(page){return page.evaluate(()=>new Promise((resolve,reject)=
 async function seed(page,state){await page.evaluate(state=>new Promise((resolve,reject)=>{const request=indexedDB.open('citywalk-for-two',1);request.onsuccess=()=>{const db=request.result,tx=db.transaction('state','readwrite');tx.objectStore('state').put(state,'current');tx.oncomplete=()=>{db.close();resolve();};tx.onerror=()=>reject(tx.error);};request.onerror=()=>reject(request.error);}),state);}
 async function fresh(viewport={width:390,height:844},extra={}){const context=await browser.newContext({viewport,...extra}),page=await context.newPage();activePage=page;page.on('pageerror',error=>errors.push(error.message));page.setDefaultTimeout(15000);await page.goto(base);await page.getByRole('button',{name:'领取通行证',exact:true}).waitFor();return {context,page};}
 async function start(page){await page.getByRole('button',{name:'领取通行证',exact:true}).click();await page.getByRole('button',{name:'出发',exact:true}).click();await page.locator('.card-reverse').waitFor();}
-async function reveal(page){await page.locator('.card-reverse').click();await page.locator('[data-swipe-card]').waitFor();await page.waitForTimeout(380);}
-async function options(page){const details=page.locator('.card-options');if(await details.getAttribute('open')===null)await details.locator('summary').click();}
+async function readyForAction(page){await page.waitForFunction(()=>document.querySelector('main')?.getAttribute('aria-busy')==='false');}
+async function reveal(page){await readyForAction(page);await page.locator('.card-reverse').click();await page.locator('[data-swipe-card]').waitFor();await readyForAction(page);}
+async function options(page){await readyForAction(page);const details=page.locator('.card-options');if(await details.getAttribute('open')===null)await details.locator('summary').click();}
 async function dismiss(page){const dismiss=page.locator('[data-dismiss]');if(await dismiss.isVisible())await dismiss.click();}
 try{
  if(process.env.CITYWALK_E2E_FILTER!=='upgrade'){
