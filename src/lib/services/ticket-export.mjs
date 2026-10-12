@@ -1,8 +1,9 @@
 import {BRANCHES} from '../domain/rules.mjs';
+import {drawBrand} from '../ui/brand-art.mjs';
 export function ticketLines(journey){
  const completed=journey.slots.filter(slot=>slot.status==='done');
  return [{kind:'title',text:journey.name},{kind:'meta',text:new Date(journey.startedAt).toLocaleDateString('zh-CN')},
-  {kind:'heading',text:journey.branch?BRANCHES[journey.branch].name:'一起走走的一程'},
+  {kind:'heading',text:journey.branch?BRANCHES[journey.branch].name:'沿途的一程'},
   ...(journey.branch?[{kind:'text',text:BRANCHES[journey.branch].recap}]:[]),
   {kind:'heading',text:`一起完成的任务 · ${completed.length} 张`},
   ...completed.map((slot,i)=>({kind:'text',text:`${i+1}. ${slot.card.text}`})),
@@ -21,7 +22,7 @@ export async function renderTickets(journey,brand,document=globalThis.document){
  const pages=[];for(let offset=0;offset<wrapped.length;offset+=maxLines){
   const rows=wrapped.slice(offset,offset+maxLines),canvas=document.createElement('canvas');canvas.width=width;canvas.height=Math.max(750,280+rows.length*lineHeight);
   const ctx=canvas.getContext('2d');ctx.fillStyle='#fff6df';ctx.fillRect(0,0,width,canvas.height);ctx.strokeStyle='#19394f';ctx.lineWidth=12;ctx.strokeRect(20,20,width-40,canvas.height-40);ctx.lineWidth=2;ctx.strokeStyle='#b89b54';ctx.strokeRect(36,36,width-72,canvas.height-72);
-  ctx.fillStyle='#19394f';ctx.font='bold 24px system-ui, sans-serif';ctx.fillText(`${brand} · 双人同行纪念票`,padding,100);ctx.setLineDash([8,7]);ctx.beginPath();ctx.moveTo(padding,125);ctx.lineTo(width-padding,125);ctx.stroke();ctx.setLineDash([]);
+  drawBrand(ctx,padding,60,44);ctx.fillStyle='#19394f';ctx.font='bold 24px system-ui, sans-serif';ctx.fillText(`${brand} · 双人同行纪念票`,padding+156,100);ctx.setLineDash([8,7]);ctx.beginPath();ctx.moveTo(padding,125);ctx.lineTo(width-padding,125);ctx.stroke();ctx.setLineDash([]);
   let y=185;for(const row of rows){ctx.fillStyle=row.kind==='meta'?'#647165':'#19394f';ctx.font=`${['title','heading'].includes(row.kind)?'bold ':''}${row.kind==='title'?38:28}px system-ui, sans-serif`;if(row.kind!=='space')ctx.fillText(row.text,padding,y);y+=lineHeight;}
   ctx.font='22px system-ui, sans-serif';ctx.fillStyle='#647165';ctx.fillText(`这一程已保存 · ${Math.floor(offset/maxLines)+1} / ${Math.ceil(wrapped.length/maxLines)}`,padding,canvas.height-70);
   const blob=await new Promise((resolve,reject)=>canvas.toBlob(value=>value?resolve(value):reject(Error('图片生成失败，请重试。')),'image/png'));pages.push(blob);

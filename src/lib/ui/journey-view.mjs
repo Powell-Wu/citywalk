@@ -1,3 +1,4 @@
+import {brand} from '../config/brand.ts';
 import {TYPES,MODES,score,spent,target,thresholds,elapsed} from '../domain/core.mjs';
 
 const stopNames={scene:'探索',talk:'对话',event:'挑战'};
@@ -40,7 +41,7 @@ export function adventureHome(s,ui,{esc,fmtDate,navBtn}){
  <p class="departure-caption">带上彼此，出发。</p>
  </section>
  <section class="departure-pass"><article class="ticket adventure-pass passport-ticket">
- <div class="passport-main"><p class="eyebrow">一起走走</p><h2>双人冒险通行证</h2><p class="pass-note">${se?`${fmtDate(se.startedAt)} · ${MODES[se.mode].name}`:'城市里，藏着下一关。'}</p>
+ <div class="passport-main"><p class="eyebrow">${escapeText(brand.shortName)}</p><h2>双人冒险通行证</h2><p class="pass-note">${se?`${fmtDate(se.startedAt)} · ${MODES[se.mode].name}`:'城市里，藏着下一关。'}</p>
  <div class="passport-number"><span>NO. ${String(s.history.length+1).padStart(3,'0')}</span>${se?`<span>${se.pausedAt?'暂停中':`已完成 ${sc.count} 张`}</span>`:''}</div></div>
  <div class="passport-stub">${badge()}<span>双人<br>同行</span><i aria-hidden="true">✦ ✦</i></div>
  </article><div class="passport-action">${navBtn(se?'继续冒险':'领取通行证',se?'walk':'setup','block')}<p class="footnote">${se?'进度已保存':'短途 · 半日 · 自由走走'}</p></div>${s.history.length?`<div class="last-journey"><span class="small muted">上一程</span><p>${esc(s.history[0].name)}</p>${navBtn('翻看回忆',`detail/${esc(s.history[0].id)}`,'text')}</div>`:''}

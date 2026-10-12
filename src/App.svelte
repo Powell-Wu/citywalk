@@ -3,6 +3,7 @@
  import {createController} from './lib/services/controller.mjs';
  import type {Snapshot} from './lib/config/types';
  import {brand} from './lib/config/brand';
+ import BrandLockup from './lib/components/BrandLockup.svelte';
  import ActionButton from './lib/components/ActionButton.svelte';
  import RewardFeedback from './lib/components/RewardFeedback.svelte';
  import Home from './pages/Home.svelte';
@@ -21,7 +22,7 @@
 {#if !snapshot}<div class="loading">正在打开今天的散步…</div>
 {:else if !snapshot.ready}<div class="shell"><div class="panel"><h1>先把回忆安顿好</h1><p>{snapshot.ui.storageError}</p><p>为避免记录丢失，暂时没有开始新一局。请使用普通浏览窗口，检查网站存储权限后重试。</p><ActionButton label="重新打开" action="reload" kind="block"/></div></div>
 {:else}
-<div class="shell" data-page={snapshot.name}><header class="brand"><div class="brand-name"><span class="brand-mark" aria-hidden="true">↗</span>{brand.shortName}</div><div class="brand-tools"><span class="brand-meta">{brand.subtitle}</span><ActionButton label="主题" action="skins" kind="outline icon skin-trigger" attrs={{'aria-haspopup':'dialog'}}/></div></header>
+<div class="shell" data-page={snapshot.name}><header class="brand"><BrandLockup/><div class="brand-tools"><span class="brand-meta">{brand.subtitle}</span><ActionButton label="主题" action="skins" kind="outline icon skin-trigger" attrs={{'aria-haspopup':'dialog'}}/></div></header>
 {#if snapshot.ui.storageError}<div role="alert" class="storage-error">{snapshot.ui.storageError} <ActionButton label="重试" action="reload" kind="outline"/></div>{/if}
 <aside class={`notice ${snapshot.ui.updateWaiting?'':'hidden'}`} data-update-banner aria-label="版本更新"><span>新版本已就绪，进度会保留。</span> <ActionButton label="应用更新" action="apply-update" kind="outline icon"/></aside>
 {#if snapshot.ui.schemaMessage}<aside class="notice" role="status" data-schema-status>{snapshot.ui.schemaMessage}</aside>{/if}

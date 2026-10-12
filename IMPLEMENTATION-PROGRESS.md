@@ -1,6 +1,6 @@
 # 总纲 A→D 本机实施记录
 
-已完成 Svelte/TypeScript/Vite 迁移、统一三屏、三卡试玩和重玩功能的本机实现。正式名称继续使用“一起走走”。用户于2026-10-09明确要求发布当前优化版本；发布前基线为 5c32ee0 / r-4bf7cbb6ae14。上线结果以对应 GitHub Actions 的 build/deploy 和线上 release 文件核对为准。真实手机、安装入口和五对用户试玩按 DEVICE-ACCEPTANCE.md 开展后，才能完成总纲的外部验收。
+已完成 Svelte/TypeScript/Vite 迁移、统一三屏、三卡试玩和重玩功能的本机实现。正式名称已于2026-10-12固定为“沿途未定 · Roam”，见 PROJECT-NAMING.md。用户于2026-10-09明确要求发布当前优化版本；发布前基线为 5c32ee0 / r-4bf7cbb6ae14。上线结果以对应 GitHub Actions 的 build/deploy 和线上 release 文件核对为准。真实手机、安装入口和五对用户试玩按 DEVICE-ACCEPTANCE.md 开展后，才能完成总纲的外部验收。
 
 ## 阶段交付
 

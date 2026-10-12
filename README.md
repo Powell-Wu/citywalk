@@ -1,11 +1,11 @@
-# 一起走走 · CityWalk
+# 沿途未定 · Roam
 
 使用网址：https://powell-wu.github.io/citywalk/
 
 ## 后续升级文档
 
 - [执行总纲](GAME-IMPLEMENTATION-BRIEF.md)：已决策的 Svelte + TypeScript + Vite 路线、视觉规范、迁移顺序、验收要求与可复制 agent 指令。
-- [命名候选](PROJECT-NAMING.md)：推荐“岔路来信”及备选；正式名称待选择，网页尚未更名。
+- [品牌规范](PROJECT-NAMING.md)：已固定“沿途未定 · Roam”，包含图标、字标与兼容约定。
 - [既有游戏优化方案](GAME-QUALITY-PLAN.md)：当前问题与历史检查证据，产品修复要求继续适用。
 
 总纲 A→D 的本机实现已逐步接入；阶段证据和设备待验项见 IMPLEMENTATION-PROGRESS.md 与 DEVICE-ACCEPTANCE.md。
@@ -73,4 +73,4 @@ npm run preview
 
 最近三局已完成卡的抽取权重降低到普通卡的四分之一；预算、场景、禁用和本局去重仍为硬条件。所有候选都近期出现过时仍可抽取。收藏册区分喜欢、不抽、完成过，筛选在当前标签刷新或应用更新后恢复；三枚纪念章从当前及保留历史计算，撤销或删除会重算。日志详情可预览并保存 PNG 纪念票，长记录分成多页逐页保存；支持文件分享的手机会显示分享按钮。设置可开启翻牌、盖章、达档三个短音效，默认关闭，后台停止，前台下一次手势可恢复。
 
-性能复测运行 npm run measure:performance，使用锁定的官方 web-vitals 库测量 LCP、INP、CLS，记录冷/热缓存、尺寸、网络和 CPU 条件；库只用于测试，不进入产品或发送数据。实机和五对用户试玩按 DEVICE-ACCEPTANCE.md 单独记录。正式名称尚未选择，继续使用“一起走走”；模拟尺寸、浏览器触摸和自动性能测量不代表真实手机或真人验收。
+性能复测运行 npm run measure:performance，使用锁定的官方 web-vitals 库测量 LCP、INP、CLS，记录冷/热缓存、尺寸、网络和 CPU 条件；库只用于测试，不进入产品或发送数据。实机和五对用户试玩按 DEVICE-ACCEPTANCE.md 单独记录。正式名称为“沿途未定 · Roam”；模拟尺寸、浏览器触摸和自动性能测量不代表真实手机或真人验收。
