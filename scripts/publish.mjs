@@ -5,8 +5,9 @@ import {fileURLToPath, pathToFileURL} from 'node:url';
 import {createInterface} from 'node:readline/promises';
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
-const allowed=['src','public','tests','scripts','.github','package.json','package-lock.json','index.html','vite.config.ts','svelte.config.js','tsconfig.json','README.md','.gitignore','.gitattributes','publish.cmd','GAME-IMPLEMENTATION-BRIEF.md','GAME-QUALITY-PLAN.md','PROJECT-NAMING.md','MIGRATION-INVENTORY.md','IMPLEMENTATION-PROGRESS.md','DEVICE-ACCEPTANCE.md'];
-const inScope=file=>allowed.some(p=>file===p||file.startsWith(p+'/'))||file.startsWith('dist/');
+const allowed=['src','public','tests','scripts','.github','package.json','package-lock.json','index.html','vite.config.ts','svelte.config.js','tsconfig.json','README.md','.gitignore','.gitattributes','publish.cmd','docs','GAME-IMPLEMENTATION-BRIEF.md','GAME-QUALITY-PLAN.md','PROJECT-NAMING.md','MIGRATION-INVENTORY.md','IMPLEMENTATION-PROGRESS.md','DEVICE-ACCEPTANCE.md'];
+const localDocs=['docs/archive/local','docs/archive/sessions'];
+const inScope=file=>!localDocs.some(p=>file===p||file.startsWith(p+'/'))&&(allowed.some(p=>file===p||file.startsWith(p+'/'))||file.startsWith('dist/'));
 
 export async function publish({run,ask,log,open}){
  const git=(...args)=>run('git',args);
@@ -38,8 +39,8 @@ export async function publish({run,ask,log,open}){
    if(!existing){const value=(await ask(label+'：')).trim();if(!value)throw Error('未填写提交身份，已停止。');git('config','--local',key,value);}
   }
   if(legacyDist)git('rm','-r','--cached','--','dist');
-  // Only existing allowed paths are passed: optional developer docs may be absent.
-  git('add','--',...allowed.filter(file=>fs.existsSync(path.join(root,file))));
+  // Include tracked removals after document moves; omit never-existing optional paths.
+  git('add','--',...allowed.filter(file=>fs.existsSync(path.join(root,file))||git('ls-files','--',file).trim()));
   git('commit','-m',message);
  }else log(`发现 ${ahead} 个尚未推送的本地提交，正在重试推送。`);
  git('push','origin','main');

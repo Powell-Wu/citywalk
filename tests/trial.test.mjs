@@ -22,6 +22,6 @@ test('trial preserves hard disabled filters, local deduplication and the current
 test('twelve curated cards specify who starts, a shared action and the completion condition',()=>{
  const cards=CARDS.filter(card=>card.duo);assert.equal(cards.length,12);for(const card of cards)for(const key of ['first','action','done'])assert(card.duo[key].trim());
 });
-test('v2 validates snapshots, branches and duo prose at runtime before importing',()=>{
+test('current schema validates snapshots, branches and duo prose at runtime before importing',()=>{
  const s=start();for(const mutate of [s=>delete s.session.rules,s=>s.session.rules.thresholds=[1,2,3],s=>s.session.slots[0].points=77,s=>s.session.branch='__proto__',s=>s.sound='yes',s=>s.session.rules.id='unknown']){const raw=structuredClone(s);mutate(raw);assert.throws(()=>validateBackup(raw));}
 });

@@ -1,4 +1,5 @@
 // Optional local asset preparation: node scripts/prepare-art.cjs <sharp module path>
+// Tasks use quality 70 at the same resolution; all PNG masters are preserved.
 // Published WebP files are committed; deployment does not need sharp or originals.
 const sharp=require(process.argv[2]||'sharp');
 const path=require('node:path');
@@ -18,6 +19,7 @@ const files=[
  ['batch-04-journey/02-keepsake-v1.png','journey-keepsake.webp',960],
  ['batch-05-task-matching/01-photo-v1.png','art-photo.webp',540],
  ['batch-05-task-matching/02-sound-v1.png','art-sound.webp',540],
- ['batch-05-task-matching/03-cooperate-v1.png','art-cooperate.webp',540]
+ ['batch-05-task-matching/03-cooperate-v1.png','art-cooperate.webp',540],
+ ['batch-08-passport/passport-v1.png','roam-pixel-passport-v1.webp',960,48]
 ];
-(async()=>{for(const [source,name,width] of files){const result=await sharp(path.join(root,'assets/concepts',source)).resize({width,kernel:'nearest'}).webp({quality:78,alphaQuality:100,effort:6}).toFile(path.join(root,'dist',name));console.log(name,result.size);}})().catch(e=>{console.error(e);process.exitCode=1;});
+(async()=>{for(const [source,name,width,quality] of files){const result=await sharp(path.join(root,'assets/concepts',source)).resize({width,kernel:'nearest'}).webp({quality:quality??(name.startsWith('art-')?70:78),alphaQuality:100,effort:6}).toFile(path.join(root,'public',name));console.log(name,result.size);}})().catch(e=>{console.error(e);process.exitCode=1;});

@@ -37,6 +37,8 @@ export function createDraftKeeper(storage){
   restore(document,context){
    prune();
    for(const name of forms){const element=document.getElementById(name),draft=records[formKey(name,context)];if(element&&draft)applyFields(fieldsOf(element),draft.fields);}
+   document.getElementById('setup-form')?.dispatchEvent?.(new Event('change',{bubbles:true}));
+   document.getElementById('card-form')?.dispatchEvent?.(new Event('change',{bubbles:true}));
   },
   readView(context){return view.hash===context.hash&&view.session===context.session&&Date.now()-view.at<MAX_AGE?cleanView(view):{};},
   clear(name,context){delete records[formKey(name,context)];persist();},
@@ -61,4 +63,6 @@ export function restoreUpdateDraft(document,storage,context){
   if(!el||el.type!==field.type||el.type==='file'||el.type==='password')continue;
   if(['checkbox','radio'].includes(el.type))el.checked=!!field.checked;else el.value=field.value;
  }
+ document.getElementById?.('setup-form')?.dispatchEvent?.(new Event('change',{bubbles:true}));
+ document.getElementById?.('card-form')?.dispatchEvent?.(new Event('change',{bubbles:true}));
 }

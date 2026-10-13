@@ -4,6 +4,7 @@ import './styles/base.css';
 import './styles/theme.css';
 import './styles/motion.css';
 import './styles/accessibility.css';
+import './styles/postal.css';
 const target=document.getElementById('app')!;
 target.replaceChildren();
 mount(App,{target});

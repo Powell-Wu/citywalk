@@ -1,5 +1,7 @@
 # Migration inventory — baseline 5c32ee0
 
+> Archived on 2026-10-13: the migration is complete. This table preserves baseline paths, disposition and SHA-256; current source lives in src/public, and dist is generated output.
+
 The original dist was preserved during _site verification, then converted to generated output after the baseline browser/upgrade gates passed. Hashes identify the pre-migration files; controller and Svelte components replace old rendering. Legacy ui render functions remain only for regression evidence and are not mounted by the new app.
 
 | Baseline file | Destination / disposition | SHA-256 |

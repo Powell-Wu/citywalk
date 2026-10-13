@@ -10,7 +10,7 @@ test('Windows launcher uses ASCII and CRLF so cmd does not misparse lines',()=>{
  assert.match(fs.readFileSync(new URL('../.gitattributes',import.meta.url),'utf8'),/\*\.cmd text eol=crlf/);
 });
 
-function fixture({behind=0,ahead=0,changes=' M src/lib/domain/cards.mjs',fail='',staged='',legacyDist='',generatedStaged='',message='更新卡片 & echo secret'}={}){
+function fixture({behind=0,ahead=0,changes=' M src/lib/domain/cards.mjs',fail='',staged='',legacyDist='',tracked=[],generatedStaged='',message='更新卡片 & echo secret'}={}){
  const calls=[],logs=[];
  return {calls,logs,options:{ask:async()=>message,log:s=>logs.push(s),open:u=>calls.push(['open',u]),run:(cmd,args)=>{
   calls.push([cmd,...args]);
@@ -18,7 +18,7 @@ function fixture({behind=0,ahead=0,changes=' M src/lib/domain/cards.mjs',fail=''
   if(args[0]==='branch')return 'main';
   if(args[0]==='remote')return 'https://github.com/Powell-Wu/citywalk.git';
   if(args[0]==='diff')return args.some(arg=>arg.startsWith('--diff-filter=ACMRT'))?generatedStaged:args.includes('--cached')?staged:'';
-  if(args[0]==='ls-files')return legacyDist;
+  if(args[0]==='ls-files')return args.at(-1)==='dist'?legacyDist:tracked.filter(file=>file===args.at(-1)||file.startsWith(args.at(-1)+'/')).join('\n');
   if(args[0]==='rev-list')return `${ahead}\t${behind}`;
   if(args[0]==='status')return changes;
   if(args[0]==='config')return 'Configured identity';
@@ -26,10 +26,20 @@ function fixture({behind=0,ahead=0,changes=' M src/lib/domain/cards.mjs',fail=''
  }}};
 }
 test('publish stops before staging or pushing if tests fail or remote is ahead',async()=>{
- for(const params of [{fail:'--test'},{fail:'scripts/build.mjs'},{fail:'scripts/e2e.mjs'},{behind:1},{staged:'private.txt\0'},{staged:'dist/index.html\0',generatedStaged:'dist/index.html'}]){
+ for(const params of [{fail:'--test'},{fail:'scripts/build.mjs'},{fail:'scripts/e2e.mjs'},{behind:1},{staged:'private.txt\0'},{staged:'docs/archive/sessions/private.md\0'},{staged:'docs/archive/local/runbook.md\0'},{staged:'dist/index.html\0',generatedStaged:'dist/index.html'}]){
   const f=fixture(params);await assert.rejects(publish(f.options));
   assert(!f.calls.some(c=>['add','commit','push','open'].includes(c[1])));
  }
+});
+test('publish stages relocated docs and tracked root removals while excluding local materials',async()=>{
+ const f=fixture({changes:' D GAME-IMPLEMENTATION-BRIEF.md\n?? docs/',staged:'docs/plans/ROADMAP.md\0',tracked:['GAME-IMPLEMENTATION-BRIEF.md']});
+ await publish(f.options);
+ const add=f.calls.find(call=>call[1]==='add');
+ assert(add.includes('docs'));
+ assert(add.includes('GAME-IMPLEMENTATION-BRIEF.md'));
+ assert(!add.includes('GAME-QUALITY-PLAN.md'));
+ assert(!add.some(arg=>['assets','test-results','notes.md','task_plan.md','runbook.md','docs/archive/local','docs/archive/sessions'].includes(arg)));
+ assert(f.calls.find(call=>call[1]==='push'));
 });
 test('migration untracks original dist after all checks, while the generated output is never added',async()=>{
  const f=fixture({legacyDist:'dist/app.mjs\ndist/index.html'});await publish(f.options);

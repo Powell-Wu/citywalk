@@ -21,11 +21,11 @@ async function worker(fail=false){
  vm.runInContext(code,context);return {self,handlers,caches,buckets,network:()=>network,skips:()=>skips};
 }
 const install=async worker=>{let promise;worker.handlers.install({waitUntil:value=>promise=value});await promise;};
-test('schema guard refuses unknown or v1 clients and accepts only an all-v2 scope',async()=>{
+test('schema guard refuses unknown, v1 and v2 clients before allowing v3 theme writes',async()=>{
  const w=await worker(),messages=[];w.self.clients.matchAll=async()=>[{id:'new',url:'https://walk.example/citywalk/#home',postMessage:x=>messages.push(x)},{id:'old',url:'https://walk.example/citywalk/#walk',postMessage:x=>messages.push(x)}];
  const report=async(id,schema)=>{let done;w.handlers.message({source:{id},data:{type:'CLIENT_VERSION',version:'r-aaaaaaaaaaaa',schema},waitUntil:p=>done=p});await done;};
- const check=async()=>{let done,answer;w.handlers.message({data:{type:'CAN_WRITE_SCHEMA',schema:2},ports:[{postMessage:x=>answer=x}],waitUntil:p=>done=p});await done;return answer.compatible;};
- await report('new',2);assert.equal(await check(),false);assert(messages.some(x=>x.type==='VERSION_REQUEST'));await report('old',1);assert.equal(await check(),false);await report('old',2);assert.equal(await check(),true);
+ const check=async()=>{let done,answer;w.handlers.message({data:{type:'CAN_WRITE_SCHEMA',schema:3},ports:[{postMessage:x=>answer=x}],waitUntil:p=>done=p});await done;return answer.compatible;};
+ await report('new',3);assert.equal(await check(),false);assert(messages.some(x=>x.type==='VERSION_REQUEST'));await report('old',1);assert.equal(await check(),false);await report('old',2);assert.equal(await check(),false);await report('old',3);assert.equal(await check(),true);
 });
 test('built worker caches the full recursive shell and serves subpath navigation offline',async()=>{const w=await worker();await install(w);assert(await w.caches.match('https://walk.example/citywalk/offline-ready'));const count=w.network();let response;w.handlers.fetch({request:{url:'https://walk.example/citywalk/',method:'GET',mode:'navigate'},respondWith:value=>response=value});assert.equal(await(await response).text(),'CACHED APP');assert.equal(w.network(),count);assert.equal(w.skips(),0);w.handlers.message({data:{type:'SKIP_WAITING'}});assert.equal(w.skips(),1);});
 test('failed or hash-mismatched offline download deletes the incomplete cache and never reports ready',async()=>{for(const fail of [true,'corrupt']){const w=await worker(fail);await assert.rejects(install(w));assert.equal(await w.caches.match('https://walk.example/citywalk/offline-ready'),undefined);assert.equal(w.buckets.size,0);}});

@@ -16,6 +16,7 @@
  import Settings from './pages/Settings.svelte';
  let root:HTMLElement;
  let snapshot=$state.raw<Snapshot|null>(null);
+ const navIcons:Record<string,string>={home:'M3 10.5 12 3l9 7.5M5 9v12h5v-7h4v7h5V9',library:'M4 4h6a3 3 0 0 1 3 3v14a4 4 0 0 0-4-2H4zM13 7a3 3 0 0 1 3-3h5v15h-4a4 4 0 0 0-4 2',history:'M5 3h13a1 1 0 0 1 1 1v17H6a2 2 0 0 1-2-2V5a2 2 0 0 1 1-2zM8 3v14M11 8h5M11 12h5M4 17h15',settings:'M5 6h14M5 12h14M5 18h14M9 4v4M15 10v4M10 16v4'};
  onMount(()=>{const controller=createController(root,(next:Snapshot)=>flushSync(()=>{snapshot=next;}));return ()=>controller.dispose();});
 </script>
 <div bind:this={root}>
@@ -36,7 +37,7 @@
 {:else if snapshot.name==='settings'}<Settings state={snapshot.state} ui={snapshot.ui} release={snapshot.release}/>
 {:else}<Home state={snapshot.state} ui={snapshot.ui}/>{/if}
 </main></div>
-<nav class="nav" aria-label="主导航">{#each [['home','今天'],['library','收藏册'],['history','冒险日志'],['settings','设置']] as [route,label]}<button type="button" data-action="nav" data-route={route} class={snapshot.name===route||route==='home'&&['walk','setup','finish'].includes(snapshot.name)?'active':''} aria-current={snapshot.name===route?'page':undefined}>{label}</button>{/each}</nav>
+<nav class="nav" aria-label="主导航">{#each [['home','今天'],['library','收藏册'],['history','冒险日志'],['settings','设置']] as [route,label]}<button type="button" data-action="nav" data-route={route} class={snapshot.name===route||route==='home'&&['walk','setup','finish'].includes(snapshot.name)?'active':''} aria-current={snapshot.name===route?'page':undefined}><svg viewBox="0 0 24 24" aria-hidden="true"><path d={navIcons[route]}/></svg><span>{label}</span></button>{/each}</nav>
 {/if}
 <RewardFeedback/>
 </div>

@@ -1,5 +1,5 @@
 // JSON schema and IndexedDB version are deliberately independent.
-export const SCHEMA_VERSION=2;
+export const SCHEMA_VERSION=3;
 export const LEGACY_PLANS={short:['scene','talk','event','talk'],half:['scene','talk','event','scene','talk','event','talk'],free:[]};
 export const LEGACY_POINTS={scene:2,talk:2,event:3};
 export const BRANCHES={

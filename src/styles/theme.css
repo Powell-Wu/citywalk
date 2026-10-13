@@ -60,7 +60,7 @@
 .collection-cover>div,.journal-cover>div{min-width:0}.collection-cover img,.journal-cover img{object-fit:contain;image-rendering:pixelated;flex:none}
 .collection-cover .eyebrow,.journal-cover .eyebrow,.setup-intro .eyebrow{font-size:.75rem;margin-bottom:6px}
 .collection-cover p,.journal-cover p,.setup-intro p{margin:0 0 6px}
-.collection-tabs{gap:8px}.collection-tabs .chip{min-height:42px;border-radius:3px}
+.collection-tabs{gap:8px}.collection-tabs .chip{min-height:44px;border-radius:3px}
 .collection-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
 .collection-card{--collection-tone:var(--green);display:flex;flex-direction:column;border:1px solid var(--line);border-top:3px solid var(--collection-tone);background:var(--white);box-shadow:3px 3px #17354d12;min-width:0}
 .collection-card.talk{--collection-tone:var(--blue);border-radius:10px 10px 10px 0}.collection-card.event{--collection-tone:#935627;border-top-style:double;border-top-width:5px}
@@ -71,7 +71,7 @@
 .shelved-label{font-size:.75rem;color:var(--muted)}.card-shelved .collection-art img{filter:grayscale(.7)}.card-shelved{border-style:dashed}
 .journal-list{border-left:2px solid var(--line);padding-left:20px;margin-left:12px}.journal-entry{position:relative;background:var(--white);border:1px solid var(--line);padding:18px;margin-bottom:18px}
 .journal-index{position:absolute;left:-35px;top:20px;background:var(--paper);border:1px solid var(--line);color:var(--accent);width:26px;height:26px;display:grid;place-items:center;font:.7rem ui-monospace,monospace}
-.journal-entry h2{font-size:1.2rem;overflow-wrap:anywhere;margin:12px 0 6px}.journal-entry .help{margin:0 0 10px}.journal-entry .btn{padding:5px 0;min-height:40px}
+.journal-entry h2{font-size:1.2rem;overflow-wrap:anywhere;margin:12px 0 6px}.journal-entry .help{margin:0 0 10px}.journal-entry .btn{padding:5px 0;min-height:44px}
 .journal-excerpt{border-left:2px solid #99b3a6;padding-left:12px;color:var(--muted);font-size:.9rem;overflow-wrap:anywhere}.journal-empty-art{display:block;width:100%;height:auto;max-height:190px;object-fit:contain;image-rendering:pixelated;margin-bottom:20px}
 .setup-emblem{display:grid;place-items:center;flex:none;width:42px;height:42px;background:var(--accent);color:var(--white);font-size:1.5rem;box-shadow:3px 3px #bdcfc4}
 .shell[data-page=setup] .mode{border-radius:3px;border-top:3px solid var(--line);box-shadow:2px 2px #17354d12}.shell[data-page=setup] .mode:has(input:checked){border-top-color:var(--green);background:#edf4ed}

@@ -1,8 +1,12 @@
 # CityWalk 下一步优化方案
 
-> 后续执行入口：[GAME-IMPLEMENTATION-BRIEF.md](GAME-IMPLEMENTATION-BRIEF.md)。2026-10-09 用户已同意升级 Svelte，并委托助手决定技术路线：采用 Svelte 5 + TypeScript + Vite，保留原静态托管与存档身份。本方案的产品修复要求及历史检查证据继续保留；其中将原生 ES 模块 UI 作为长期路线的建议由执行总纲替代。命名候选见 [PROJECT-NAMING.md](PROJECT-NAMING.md)。
+> 归档：2026-10-13。M0/M1及第二轮工程项已完成；本文保留原评估、范围估算和执行更新。现行约束见 [总纲](../../plans/GAME-IMPLEMENTATION-BRIEF.md)，剩余工作见 [路线图](../../plans/ROADMAP.md)。
+
+> 后续执行入口：[GAME-IMPLEMENTATION-BRIEF.md](../../plans/GAME-IMPLEMENTATION-BRIEF.md)。2026-10-09 用户已同意升级 Svelte，并委托助手决定技术路线：采用 Svelte 5 + TypeScript + Vite，保留原静态托管与存档身份。本方案的产品修复要求及历史检查证据继续保留；其中将原生 ES 模块 UI 作为长期路线的建议由执行总纲替代。命名候选见 [PROJECT-NAMING.md](../../design/PROJECT-NAMING.md)。
 
 评估日期：2026-10-09。基线版本：`r-92978b72c0f1`。目标：把双人城市漫步做成有清楚进程、流畅操作和重玩动力的网页端游戏。
+
+执行更新（2026-10-13）：用户要求暂缓人工验收、直接进行第二轮，并在结束后提醒。§4的观察城市/默契挑战已加入本机构建r-9c29590d4fb7；近期权重也应用于换卡。两主题、原玩法、存档升级及性能证据见IMPLEMENTATION-PROGRESS.md。实机与真人结果仍待验，不记作通过。
 
 建议下一版集中完成 **游戏主界面、旅程进程、奖励预告与反馈节奏**。完成这一轮后，再加入跨局新鲜度、双人协作和轻量分支。沿用“一部手机、两人同行、现实城市任务、明亮像素卡牌”的产品定位。
 
@@ -61,7 +65,7 @@
 - 844×390 横屏允许滚动，所有操作可达；1100×850 桌面有明确布局，支持按钮和键盘操作。
 - 左滑、右滑、短滑回弹、纵向滚动、取消触摸、暂停和减少动态效果保留既有行为。
 
-主要落点：[views.mjs](D:/Documents/Codex/citywalk-app/dist/views.mjs)、[task-view.mjs](D:/Documents/Codex/citywalk-app/dist/task-view.mjs)、[card-object.css](D:/Documents/Codex/citywalk-app/dist/card-object.css)、[pixel.css](D:/Documents/Codex/citywalk-app/dist/pixel.css)。
+主要落点：views.mjs（旧版本路径 `dist/views.mjs`）、task-view.mjs（旧版本路径 `dist/task-view.mjs`）、card-object.css（旧版本路径 `dist/card-object.css`）、pixel.css（旧版本路径 `dist/pixel.css`）。
 
 ### B. 旅程进程与奖励预告〔P1〕
 
@@ -80,7 +84,7 @@
 - 跳过和稍后都有独立状态，路线不把它们计为已完成；自由和关闭计分模式不展示无依据的分数目标。
 - 收尾、历史与进行中的旧存档展示一致；渲染旅程路线不会改写原存档。
 
-主要落点：[views.mjs](D:/Documents/Codex/citywalk-app/dist/views.mjs)、[journey-view.mjs](D:/Documents/Codex/citywalk-app/dist/journey-view.mjs)、[core.mjs](D:/Documents/Codex/citywalk-app/dist/core.mjs)。
+主要落点：views.mjs（旧版本路径 `dist/views.mjs`）、journey-view.mjs（旧版本路径 `dist/journey-view.mjs`）、core.mjs（旧版本路径 `dist/core.mjs`）。
 
 ### C. 完成反馈与滑牌节奏〔P1〕
 
@@ -97,7 +101,7 @@
 - 出牌、积分、节点、下一张卡的信息始终一致；减少动态效果时直接更新状态。
 - 真机滑动无明显卡顿。反馈可见时间与完整动画时间分别记录，不能用动画时长替代输入响应指标。
 
-主要落点：[app.mjs](D:/Documents/Codex/citywalk-app/dist/app.mjs)、[swipe.mjs](D:/Documents/Codex/citywalk-app/dist/swipe.mjs)、[rewards.mjs](D:/Documents/Codex/citywalk-app/dist/rewards.mjs)。
+主要落点：app.mjs（旧版本路径 `dist/app.mjs`）、swipe.mjs（旧版本路径 `dist/swipe.mjs`）、rewards.mjs（旧版本路径 `dist/rewards.mjs`）。
 
 ### D. 资源整理与户外恢复体验〔P0〕
 
@@ -114,11 +118,11 @@
 - 刷新保留已提交状态；离线完成、重开与重新联网后的分数一致。
 - 所有新增状态处理都有明确的保存失败恢复路径。
 
-主要落点：[sw.js](D:/Documents/Codex/citywalk-app/dist/sw.js)、[drafts.mjs](D:/Documents/Codex/citywalk-app/dist/drafts.mjs)、[app.mjs](D:/Documents/Codex/citywalk-app/dist/app.mjs)、[offline.test.mjs](D:/Documents/Codex/citywalk-app/tests/offline.test.mjs)。
+主要落点：sw.js（旧版本路径 `dist/sw.js`）、drafts.mjs（旧版本路径 `dist/drafts.mjs`）、app.mjs（旧版本路径 `dist/app.mjs`）、[offline.test.mjs](D:/Documents/Codex/citywalk-app/tests/offline.test.mjs)。
 
 ## 4. 第二轮：增加选择、双人协作和重玩动力
 
-第一轮通过试玩后再开展，约 **4–6 个开发日**。先用现有 48 张卡做出差异，再根据反馈扩充任务内容。
+原建议在第一轮通过试玩后开展，约 **4–6 个开发日**。用户2026-10-13明确要求先暂缓人工验收、直接进行本轮，执行以此为准；真人反馈留到本轮结束后。先用现有 48 张卡做出差异，再根据反馈扩充任务内容。
 
 | 优先事项 | 具体实施 | 验收方式 |
 | --- | --- | --- |
@@ -191,13 +195,13 @@ M1 后邀请 5 对用户开展小样本试玩：每对完成一局，询问当�
 6. 复现并处理切后台后的花费草稿问题，验证同卡恢复及换卡隔离。
 7. 跑现有测试与新增关键浏览器用例，完成一次短途试玩后再开展 M2。
 
-本轮已完成评估和方案编制。方案中的改动尚未实装。现有业务源码、计分与发布版本保持本次评估基线。
+2026-10-09本文件编制时仅完成评估；随后第一轮与既有重玩功能已发布，2026-10-13补齐第二轮主题并完成本机验证。当前实现和证据以IMPLEMENTATION-PROGRESS.md为准，计分保持兼容，人工验收暂缓。
 
 ## 附录：本次检查证据
 
 - [窄屏任务页截图：提示被底部导航遮住](D:/Documents/Codex/citywalk-app/test-results/quality-audit-20261009/walk-320.png)
 - [普通完成宝箱截图](D:/Documents/Codex/citywalk-app/test-results/quality-audit-20261009/completion-320.png)
-- [评估笔记](D:/Documents/Codex/citywalk-app/notes.md)
-- [阶段记录](D:/Documents/Codex/citywalk-app/task_plan.md)
+- 评估笔记：原 `notes.md` 已被后续会话覆盖，未保留当时独立快照
+- 阶段记录：原 `task_plan.md` 已被后续会话覆盖，现存品牌/第二轮工作记录见本机 `docs/archive/sessions/2026-10-13-before-organization/`
 
 ![320×700 任务首屏：滑动提示位于固定导航后方](D:/Documents/Codex/citywalk-app/test-results/quality-audit-20261009/walk-320.png)

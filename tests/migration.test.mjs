@@ -8,8 +8,8 @@ import {validateBackup,migrateState,score,complete,TYPES,thresholds} from '../sr
 test('published v1 fixture validates and resumes with identical history and scoring',async()=>{
  const old=JSON.parse(await fs.readFile(new URL('./fixtures/v1-state.json',import.meta.url),'utf8'));
  const clean=validateBackup(old),history=structuredClone(clean.history);
- const originalFields=journey=>{const {rules,branch,...rest}=journey;return{...rest,slots:rest.slots.map(({points,...slot})=>slot)};};
- assert.equal(clean.version,2);assert.deepEqual(clean.history.map(originalFields),old.history);assert.deepEqual(originalFields(clean.session),old.session);assert.equal(migrateState(old).revision,old.revision);
+ const originalFields=journey=>{const {rules,branch,journeyTheme,themePlan,...rest}=journey;return{...rest,slots:rest.slots.map(({points,...slot})=>slot)};};
+ assert.equal(clean.version,3);assert.deepEqual(clean.history.map(originalFields),old.history);assert.deepEqual(originalFields(clean.session),old.session);assert.equal(migrateState(old).revision,old.revision);
  const oldPoints=TYPES.scene.points;try{TYPES.scene.points=99;assert.equal(score(clean.history[0]).total,6);assert.deepEqual(thresholds(clean.history[0]),[8,11,13]);}finally{TYPES.scene.points=oldPoints;}
  const first=clean.session.slots[0];complete(clean,clean.session.id,first.id,first.card.id,0);
  assert.equal(score(clean.session).total,2);assert.equal(score(clean.history[0]).total,6);assert.deepEqual(clean.history,history);

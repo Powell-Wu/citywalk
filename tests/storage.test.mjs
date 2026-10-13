@@ -18,7 +18,17 @@ test('v1 validation and migration share the atomic user transaction; abort leave
  const db=await new Promise((resolve,reject)=>{const r=indexedDB.open('citywalk-for-two',1);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});
  const raw=()=>new Promise(resolve=>{const tx=db.transaction('state'),r=tx.objectStore('state').get('current');r.onsuccess=()=>resolve(r.result);});
  await new Promise(resolve=>{const tx=db.transaction('state','readwrite');tx.objectStore('state').put(old,'current');tx.oncomplete=resolve;});
- assert.equal((await readState()).version,2);assert.deepEqual(await raw(),old);
+ assert.equal((await readState()).version,3);assert.deepEqual(await raw(),old);
  await assert.rejects(updateState(s=>{s.session.name='lost';throw Error('abort migration');}),/abort migration/);assert.deepEqual(await raw(),old);
- const slot=old.session.slots[0];await updateState(s=>complete(s,s.session.id,slot.id,slot.card.id));const saved=await raw();assert.equal(saved.version,2);assert.equal(saved.revision,old.revision+1);assert.equal(score(saved.history[0]).total,6);assert.equal(saved.history[0].name,old.history[0].name);assert(saved.session.rules);db.close();
+ const slot=old.session.slots[0];await updateState(s=>complete(s,s.session.id,slot.id,slot.card.id));const saved=await raw();assert.equal(saved.version,3);assert.equal(saved.revision,old.revision+1);assert.equal(score(saved.history[0]).total,6);assert.equal(saved.history[0].name,old.history[0].name);assert(saved.session.rules);db.close();
+});
+
+test('v2 read and aborted edit preserve bytes; successful edit commits v3 and unchanged snapshots',async()=>{
+ const old=JSON.parse(await fs.readFile(new URL('./fixtures/v2-state.json',import.meta.url),'utf8'));
+ const db=await new Promise(resolve=>{const r=indexedDB.open('citywalk-for-two',1);r.onsuccess=()=>resolve(r.result);});
+ const raw=()=>new Promise(resolve=>{const r=db.transaction('state').objectStore('state').get('current');r.onsuccess=()=>resolve(r.result);});
+ await new Promise(resolve=>{const tx=db.transaction('state','readwrite');tx.objectStore('state').put(old,'current');tx.oncomplete=resolve;});
+ assert.equal((await readState()).version,3);assert.deepEqual(await raw(),old);
+ await assert.rejects(updateState(s=>{s.sound=!s.sound;throw Error('abort v2 migration');}),/abort v2/);assert.deepEqual(await raw(),old);
+ await updateState(s=>{s.sound=!s.sound;});const saved=await raw();assert.equal(saved.version,3);assert.equal(saved.revision,old.revision+1);assert.equal(saved.sound,!old.sound);assert.deepEqual(saved.history[0].rules,old.history[0].rules);assert.equal(saved.history[0].name,old.history[0].name);db.close();
 });
