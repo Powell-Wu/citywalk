@@ -6,7 +6,7 @@ import {CARDS,TYPES} from './cards.mjs';
 import {SCHEMA_VERSION,LEGACY_PLANS,BRANCHES,TRIAL_FIRST,ruleSnapshot,slotPoints,sessionRules,validateRules} from './rules.mjs';
 export {CARDS,TYPES,BRANCHES,JOURNEY_THEMES,slotPoints,sessionRules};
 export const MODES={trial:{name:'三卡小冒险',duration:20,sequence:['scene','talk','event']},short:{name:'轻轻走一会',duration:75,sequence:['scene','talk','event','talk']},half:{name:'把半天留给我们',duration:240,sequence:['scene','talk','event','scene','talk','event','talk']},free:{name:'自由走走',duration:0,sequence:[]}};
-export const REWARDS=['一起吃份甜品','由你挑选下次约会','约好一次喜欢的大餐'];
+export const REWARDS=['一起吃份甜品','由你选择下次同行的路线','约好一起做一件喜欢的事'];
 export const uid=()=>globalThis.crypto.randomUUID();
 export function initialState(){return{version:SCHEMA_VERSION,revision:0,theme:'adventure',session:null,history:[],customCards:[],disabled:[],favorites:[],preferences:{mode:'short',journeyTheme:'mixed',place:'both',budget:0,scoring:true,rewards:[...REWARDS]},offlineReady:false,sound:false};}
 export function allCards(s){return [...CARDS,...s.customCards];}

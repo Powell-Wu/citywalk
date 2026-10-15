@@ -36,7 +36,7 @@ try{
   if(width<700){await page.evaluate(()=>{document.documentElement.style.setProperty('--walk-safe-top','47px');document.documentElement.style.setProperty('--walk-safe-bottom','34px');});assert(await gap()>=8,'Task options must clear simulated safe areas');await capture(page,`task-safe-${width}`);await page.evaluate(()=>{document.documentElement.style.removeProperty('--walk-safe-top');document.documentElement.style.removeProperty('--walk-safe-bottom');});}
   await page.goto(server.base+'#history');await page.locator('[data-page=history]').waitFor();await capture(page,`album-empty-${width}`,true);
   await seed(page);await page.reload();await page.locator('.journal-entry').first().waitFor();assert.equal(await page.locator('.journal-entry').count(),3);await capture(page,`album-${width}`,true);
-  await page.goto(server.base+'#library');await page.locator('.collection-card').first().waitFor();await capture(page,`library-${width}`);
+  await page.goto(server.base+'#library');await page.getByRole('button',{name:'任务卡池',exact:true}).click();await page.locator('.collection-card').first().waitFor();await capture(page,`library-${width}`);
   await page.goto(server.base+'#detail/'+state.history[0].id);await page.locator('.journey-record').waitFor();await capture(page,`ticket-${width}`,true);
   if(width===390){await page.getByRole('button',{name:'保存纪念票图片',exact:true}).click();await page.locator('.ticket-download img').waitFor();await page.locator('.ticket-download img').evaluate(img=>img.decode());const download=page.waitForEvent('download');await page.getByRole('link',{name:'保存图片',exact:true}).click();await(await download).saveAs(out+'/ticket-export.png');await page.getByRole('button',{name:'完成',exact:true}).click();}
   await context.close();

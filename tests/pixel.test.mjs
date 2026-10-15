@@ -13,15 +13,15 @@ test('task art is stable, all built-in and custom card types resolve to public s
   assert(existsSync(new URL('../public/'+art.src,import.meta.url)));
  }
  assert.equal(covered.size,9);
- for(const file of ['card-back.webp','chest-closed.webp','chest-open.webp','explorer-badge.webp'])assert(existsSync(new URL('../public/'+file,import.meta.url)));
+ for(const file of ['deck-pattern.svg','chest-closed.webp','chest-open.webp','explorer-badge.webp'])assert(existsSync(new URL('../public/'+file,import.meta.url)));
 });
 
-test('default task actions are inside collapsed disclosure; paused cards cannot swipe',()=>{
+test('completion/replacement are outside secondary disclosure; paused cards cannot swipe',()=>{
  const s=initialState();newSession(s,s.preferences);draw(s,s.session.id,s.session.slots[0].id);
  const html=renderView(s,{},'walk');
  const disclosure=html.match(/<details class="card-options">([\s\S]*?)<\/details>/)?.[0];
- assert(disclosure);assert.match(disclosure,/data-action="complete"/);assert.match(disclosure,/data-action="replace"/);
- assert.doesNotMatch(html.replace(disclosure,''),/data-action="(?:complete|replace)"/);
+ assert(disclosure);assert.doesNotMatch(disclosure,/data-action="(?:complete|replace)"/);
+ assert.match(html.replace(disclosure,''),/data-action="complete"/);assert.match(html.replace(disclosure,''),/data-action="replace"/);
  assert.match(html,/data-swipe-card/);assert.match(html,/class="task-art"/);
  assert.doesNotMatch(renderView(s,{swipeSeen:true},'walk'),/class="swipe-guide"/);
  s.session.pausedAt=Date.now();const paused=renderView(s,{},'walk');

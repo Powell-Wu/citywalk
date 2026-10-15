@@ -10,21 +10,23 @@ if(!Number.isInteger(repetitions)||repetitions<1||repetitions>10)throw Error('Pe
 const owned=path.resolve('test-results'),destination=path.resolve(output);
 if(!destination.startsWith(owned+path.sep))throw Error('Performance output must stay inside test-results');
 await fs.mkdir(destination,{recursive:true});
+// Keep Chromium's nested native CacheStorage paths short on Windows.
+const profileRoot=path.join(owned,'perf-profiles');await fs.mkdir(profileRoot,{recursive:true});
 const resources=await resourcesFrom('dist'),server=await serveResources(()=>resources);
-const browserOptions={headless:true,...(process.env.CITYWALK_TEST_BROWSER==='chromium'?{}:{channel:process.env.CITYWALK_TEST_BROWSER||'msedge'})};let browserVersion;
+const browserOptions={headless:true,...(process.env.CITYWALK_TEST_BROWSER==='chromium'?{}:{channel:process.env.CITYWALK_TEST_BROWSER||'msedge'})};let browserVersion,diagnosticEvents=[];
 const observer=await fs.readFile('node_modules/web-vitals/dist/web-vitals.attribution.iife.js','utf8'),runs=[];
 const targets={LCP:2500,INP:200,CLS:.1};
 const ready=page=>page.waitForFunction(()=>document.querySelector('main')?.getAttribute('aria-busy')==='false');
 try{
  for(const profile of [{name:'desktop-local',viewport:{width:1100,height:850},cpu:1,latency:0,throughput:-1},{name:'mobile-simulation',viewport:{width:390,height:844},cpu:4,latency:150,throughput:375000}]){
   for(let repetition=1;repetition<=repetitions;repetition++){
-   const profileDir=await fs.mkdtemp(path.join(destination,'isolated-profile-'));
+   const profileDir=await fs.mkdtemp(path.join(profileRoot,'isolated-profile-'));
    for(const cache of ['cold','warm']){
     // Reopen only this owned test profile in a fresh process: keep the warm
     // offline cache, while avoiding retained renderer/CPU emulation state.
     const context=await chromium.launchPersistentContext(profileDir,{...browserOptions,viewport:profile.viewport});browserVersion=context.browser().version();
     try{
-    const page=context.pages()[0],metrics={},samples=[],errors=[];page.on('pageerror',error=>errors.push(error.message));
+    const page=context.pages()[0],metrics={},samples=[],errors=[],workerEvents=[];diagnosticEvents=workerEvents;page.on('pageerror',error=>errors.push(error.message));
     await page.addInitScript({content:`;
      globalThis.paintProbe={lcp:[],paint:[],longTasks:[],stages:[]};
      for(const type of ['largest-contentful-paint','paint','longtask'])new PerformanceObserver(list=>{for(const e of list.getEntries()){
@@ -34,7 +36,7 @@ try{
      }}).observe({type,buffered:true});
      const stageObserver=new MutationObserver(()=>{if(document.querySelector('.journey-art')){paintProbe.stages.push({name:'home-mounted',at:performance.now()});stageObserver.disconnect();}});stageObserver.observe(document,{childList:true,subtree:true});
 `});
-    await page.bringToFront();const cdp=await context.newCDPSession(page);await cdp.send('Emulation.setCPUThrottlingRate',{rate:profile.cpu});await cdp.send('Network.enable');await cdp.send('Network.emulateNetworkConditions',{offline:false,latency:profile.latency,downloadThroughput:profile.throughput,uploadThroughput:profile.throughput});
+    await page.bringToFront();const cdp=await context.newCDPSession(page);await cdp.send('Emulation.setCPUThrottlingRate',{rate:profile.cpu});await cdp.send('Network.enable');await cdp.send('ServiceWorker.enable');cdp.on('ServiceWorker.workerErrorReported',e=>workerEvents.push(e));cdp.on('ServiceWorker.workerVersionUpdated',e=>workerEvents.push(e));await cdp.send('Network.emulateNetworkConditions',{offline:false,latency:profile.latency,downloadThroughput:profile.throughput,uploadThroughput:profile.throughput});
     await page.goto(server.base);await page.getByRole('button',{name:'直接试玩',exact:true}).waitFor();await page.locator('.journey-art').evaluate(image=>image.decode());
     // A decoded image or a fixed sleep does not prove a contentful paint.
     // Wait for an actual hero LCP entry before input finalizes the measurement.
@@ -66,9 +68,9 @@ try{
     const passed=valid&&Object.entries(targets).every(([name,max])=>metrics[name].value<=max);
     const run={profile,cache,repetition,valid,passed,painted,validation:{completeMetrics,missingMetrics:Object.keys(targets).filter(name=>!Number.isFinite(metrics[name]?.value))},metrics,samples,observedInteractions,firstScreen,firstScreenDecodedBytes:firstScreen.resources.reduce((n,e)=>n+e.decodedBodySize,firstScreen.navigation[0]?.decodedBodySize||0),errors,limitations:'Headless desktop browser, emulated viewport/network/CPU and scripted interactions. Not real-phone or population p75 measurements.'};runs.push(run);
     console.log(JSON.stringify({profile:profile.name,cache,repetition,valid,passed,metrics:Object.fromEntries(Object.entries(metrics).map(([name,m])=>[name,m.value]))}));
-    }finally{await context.close();}
+    }catch(error){const failedPage=context.pages()[0];await fs.writeFile(destination+'/failure.json',JSON.stringify({profile:profile.name,cache,repetition,workerEvents:diagnosticEvents,requests:server.requests,message:error.message,toast:await failedPage?.locator('#toast').textContent().catch(()=>null),schema:await failedPage?.locator('[data-schema-status]').allTextContents().catch(()=>[]),worker:await failedPage?.evaluate(async()=>({controlled:!!navigator.serviceWorker.controller,registrations:(await navigator.serviceWorker.getRegistrations()).map(r=>({scope:r.scope,active:r.active?.state,installing:r.installing?.state,waiting:r.waiting?.state})),cache:await Promise.all((await caches.keys()).map(async key=>({key,entries:(await(await caches.open(key)).keys()).map(r=>r.url)})))})).catch(()=>null),url:failedPage?.url(),markup:await failedPage?.locator('main').innerText().catch(()=>null)},null,2));await failedPage?.screenshot({path:destination+'/failure.png',fullPage:true}).catch(()=>{});throw error;}finally{await context.close();}
    }
-   const actual=await fs.realpath(profileDir);if(path.dirname(actual)!==await fs.realpath(destination)||!path.basename(actual).startsWith('isolated-profile-'))throw Error('Unexpected temporary browser profile');await fs.rm(actual,{recursive:true,force:true,maxRetries:5,retryDelay:100});
+   const actual=await fs.realpath(profileDir);if(path.dirname(actual)!==await fs.realpath(profileRoot)||!path.basename(actual).startsWith('isolated-profile-'))throw Error('Unexpected temporary browser profile');await fs.rm(actual,{recursive:true,force:true,maxRetries:5,retryDelay:100});
   }
  }
  const summary=[];for(const profile of ['desktop-local','mobile-simulation'])for(const cache of ['cold','warm']){

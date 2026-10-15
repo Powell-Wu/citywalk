@@ -32,7 +32,7 @@ try{
  }
  {
   const context=await browser.newContext({viewport:{width:390,height:844},reducedMotion:'reduce'}),page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));
-  await page.goto(server.base+'#library');await page.getByRole('button',{name:'＋ 写一张自己的卡',exact:true}).click();assert.equal(await page.locator('[name=artKey]').count(),10);
+  await page.goto(server.base+'#library');await page.getByRole('button',{name:'任务卡池',exact:true}).click();await page.getByRole('button',{name:'＋ 写一张自己的卡',exact:true}).click();assert.equal(await page.locator('[name=artKey]').count(),10);
   await page.locator('#card-text').fill('用镜头找一处藏着笑脸的城市细节');await page.locator('[name=artKey][value=sound]').check();await screenshot(page,'custom-editor-390',page.locator('#card-form'));
   await page.reload();await ready(page);assert(await page.locator('[name=artKey][value=sound]').isChecked());assert.match(await page.locator('#card-text').inputValue(),/镜头/);
   await page.getByRole('button',{name:'放进收藏册',exact:true}).click();await page.locator('#card-form').waitFor({state:'detached'});let state=await read(page);assert.equal(state.customCards[0].artKey,'sound');

@@ -7,12 +7,12 @@ const exec=promisify(execFile);
 
 // Build an actual published schema-v2 source revision in an owned fixture.
 // Dependencies are shared read-only; no install, checkout or user-data mutation.
-export async function v2Baseline(){
- if(process.env.CITYWALK_V2_BASELINE_DIR){
-  const fixture=path.resolve(process.env.CITYWALK_V2_BASELINE_DIR),resources=await resourcesFrom(fixture);
+export async function v2Baseline({ref:requestedRef,directory:requestedDirectory}={}){
+ if(requestedDirectory||process.env.CITYWALK_V2_BASELINE_DIR){
+  const fixture=path.resolve(requestedDirectory||process.env.CITYWALK_V2_BASELINE_DIR),resources=await resourcesFrom(fixture);
   return{ref:'artifact',resources,version:JSON.parse(resources.get('release.json').toString()).version,fixture};
  }
- const root=process.cwd(),ref=process.env.CITYWALK_V2_BASELINE_REF||'91d13cb';
+ const root=process.cwd(),ref=requestedRef||process.env.CITYWALK_V2_BASELINE_REF||'91d13cb';
  const git=async args=>(await exec('git',['-C',root,...args],{encoding:'buffer',maxBuffer:8*1024*1024,windowsHide:true})).stdout;
  const lock=await git(['show',`${ref}:package-lock.json`]);
  if(JSON.stringify(JSON.parse(lock))!==JSON.stringify(JSON.parse(await fs.readFile('package-lock.json','utf8'))))throw Error('v2 baseline dependencies differ; supply a verified baseline artifact instead.');

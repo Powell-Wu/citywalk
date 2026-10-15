@@ -12,7 +12,7 @@ export const ART={
 };
 export const ART_NAMES={explore:'街角入口',challenge:'隐藏通道',discover:'城市线索',track:'小巷足迹',talk:'树荫对话',shop:'街角小店',photo:'镜头发现',sound:'城市声音',cooperate:'双人合作'};
 const scene=['explore','shop','talk','shop','track','track','explore','track','discover','explore','discover','discover','explore','sound','track','challenge'];
-const talk=Array(16).fill('talk');
+const talk=['talk','shop','explore','cooperate','shop','discover','track','challenge','photo','talk','shop','talk','photo','explore','cooperate','track'];
 const event=['cooperate','cooperate','shop','photo','shop','shop','shop','challenge','cooperate','shop','shop','cooperate','challenge','photo','sound','cooperate'];
 export const TASK_ART=Object.fromEntries(Object.entries({scene,talk,event}).flatMap(([type,list])=>list.map((art,i)=>[`${type}-${String(i+1).padStart(2,'0')}`,art])));
 export function cardArtKey(card){

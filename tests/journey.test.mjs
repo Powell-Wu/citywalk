@@ -19,7 +19,7 @@ function record({scoring=true,mode='short',count=3,closing=true}={}){
 test('journey recap highlights only the highest earned reward and preserves score breakdown',()=>{
  const {s,html}=record();assert.equal(score(s.history[0]).total,13);
  const loot=html.match(/<section class="journey-loot">[\s\S]*?<\/section>/)[0];
- assert.match(loot,/约好一次喜欢的大餐/);assert.doesNotMatch(loot,/一起吃份甜品/);
+ assert(loot.includes(s.history[0].rewards[2]));assert.doesNotMatch(loot,/一起吃份甜品/);
  assert.match(html,/三类集齐/);assert.match(html,/一起收尾/);
  assert.match(html,/途中未完成的任务 · 1 张/);
  assert.match(html,/&lt;img/);assert.match(html,/&lt;script&gt;/);assert.doesNotMatch(html,/<script>/);
