@@ -1,16 +1,19 @@
 const CACHE='__CONTENT_VERSION__';
 const FILES=['./'];
 const absolute=path=>new URL(path,self.registration.scope).href;
+// Both deployment paths share player storage. Unknown old-path clients must
+// finish or close before schema writes; their caches remain in a separate namespace.
+const isAppClient=client=>{try{const url=new URL(client.url);return url.origin===self.location.origin&&(url.href.startsWith(self.registration.scope)||['/citywalk/','/roam/'].some(base=>url.pathname.startsWith(base)));}catch{return false;}};
 const clientVersions=new Map();
 const clientSchemas=new Map();
 async function cleanSafeCaches(){
  const clients=await self.clients.matchAll({type:'window',includeUncontrolled:true});
- const relevant=clients.filter(client=>client.url?.startsWith(self.registration.scope));
+ const relevant=clients.filter(isAppClient);
  // Original v1 clients cannot report their version; retain caches while any
  // unknown client is open. Known Svelte clients pin the release they execute.
  if(relevant.some(client=>!clientVersions.has(client.id)))return;
- const pinned=new Set([CACHE,...relevant.map(client=>'citywalk-static-'+clientVersions.get(client.id))]);
- for(const key of await caches.keys())if(key.startsWith('citywalk-static-')&&!pinned.has(key))await caches.delete(key);
+ const pinned=new Set([CACHE,...relevant.map(client=>'roam-static-'+clientVersions.get(client.id))]);
+ for(const key of await caches.keys())if(key.startsWith('roam-static-')&&!pinned.has(key))await caches.delete(key);
 }
 self.addEventListener('install',event=>event.waitUntil((async()=>{
  const cache=await caches.open(CACHE);
@@ -43,7 +46,7 @@ self.addEventListener('message',event=>{
  if(event.data?.type==='CAN_WRITE_SCHEMA'&&event.ports?.[0])event.waitUntil((async()=>{
   if(event.data.claim)await self.clients.claim();
   const clients=await self.clients.matchAll({type:'window',includeUncontrolled:true});
-  const relevant=clients.filter(client=>client.url?.startsWith(self.registration.scope));
+  const relevant=clients.filter(isAppClient);
   const compatible=relevant.every(client=>clientSchemas.get(client.id)>=event.data.schema);
   for(const client of relevant)if(!clientSchemas.has(client.id))client.postMessage({type:'VERSION_REQUEST'});
   event.ports[0].postMessage({compatible});
@@ -58,7 +61,7 @@ self.addEventListener('fetch',event=>{
  else if(paths.includes(fileURL.href))event.respondWith((async()=>{const cache=await caches.open(CACHE);return await cache.match(fileURL.href)||fetch(event.request);})());
  else event.respondWith((async()=>{
   // Only our cache namespace and exact request URL may satisfy an old import.
-  for(const key of (await caches.keys()).reverse())if(key.startsWith('citywalk-static-')&&key!==CACHE){const cache=await caches.open(key),response=await cache.match(event.request);if(response)return response;}
+  for(const key of (await caches.keys()).reverse())if((key.startsWith('roam-static-')||key.startsWith('citywalk-static-'))&&key!==CACHE){const cache=await caches.open(key),response=await cache.match(event.request);if(response)return response;}
   return fetch(event.request);
  })());
 });

@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import {initialState,newSession,draw,score,CARDS,BRANCHES} from '../src/lib/domain/core.mjs';
 import {execFileSync} from 'node:child_process';
 import {serveResources,resourcesFrom} from './server.mjs';
-const base=process.env.CITYWALK_TEST_URL||'http://127.0.0.1:5198/citywalk/';
+const base=process.env.CITYWALK_TEST_URL||'http://127.0.0.1:5198/roam/';
 const output=process.env.CITYWALK_E2E_OUTPUT||'test-results/migration-20261009';await fs.mkdir(output,{recursive:true});
 const browser=await chromium.launch({headless:true,...(process.env.CITYWALK_TEST_BROWSER==='chromium'?{}:{channel:process.env.CITYWALK_TEST_BROWSER||'msedge'})});
 const results=[],errors=[];let activePage;
