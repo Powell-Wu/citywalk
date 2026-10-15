@@ -1,6 +1,8 @@
 # 沿途未定 · Roam
 
-使用网址：https://powell-wu.github.io/citywalk/
+使用网址：https://powell-wu.github.io/roam/
+
+GitHub 仓库：[Powell-Wu/roam](https://github.com/Powell-Wu/roam)。[仓库与网址迁移记录](docs/reports/ROAM-MIGRATION-20261015.md)。
 
 ## 项目资料
 
@@ -33,7 +35,7 @@
 
 ## 本机预览与检查
 
-首次或依赖变更后运行 npm ci。Windows 重装依赖时先关闭本项目的 Vite dev/preview，以免原生构建文件被占用。日常开发运行 npm run dev，打开终端给出的 /citywalk/ 地址。开发预览停用 Service Worker；离线和更新测试使用生产构建。
+首次或依赖变更后运行 npm ci。Windows 重装依赖时先关闭本项目的 Vite dev/preview，以免原生构建文件被占用。日常开发运行 npm run dev，打开终端给出的 /roam/ 地址。开发预览停用 Service Worker；离线和更新测试使用生产构建。
 
 ```powershell
 npm run typecheck
@@ -46,7 +48,7 @@ npm run preview
 
 逐条执行，前一步失败先处理。npm run release 兼容旧命令，并完成同一套 Vite 构建、递归版本与缓存生成。npm run check 只检查已有产物，不修改文件。npm run test:browser 是 test:e2e 的兼容入口。
 
-浏览器验收默认使用本机 Edge 和项目内 Playwright，自动启动隔离的 /citywalk/ 静态服务，不需要手工启动预览。CI 使用 Chromium；其他电脑可先运行 npx playwright install chromium 并设置 CITYWALK_TEST_BROWSER=chromium。CITYWALK_TEST_BROWSER 也可指定已有浏览器通道。生产流程结果与截图默认在已忽略的 test-results/migration-20261009；随后自动检查组件卸载、确认弹窗取消、监听清理与已提交操作的异步收尾，结果在 test-results/lifecycle-20261009。CITYWALK_E2E_OUTPUT 可指定独立结果目录，便于保留不同浏览器的证据。
+浏览器验收默认使用本机 Edge 和项目内 Playwright，自动启动隔离的 /roam/ 静态服务，不需要手工启动预览。CI 使用 Chromium；其他电脑可先运行 npx playwright install chromium 并设置 CITYWALK_TEST_BROWSER=chromium。CITYWALK_TEST_BROWSER 也可指定已有浏览器通道。生产流程结果与截图默认在已忽略的 test-results/migration-20261009；随后自动检查组件卸载、确认弹窗取消、监听清理与已提交操作的异步收尾，结果在 test-results/lifecycle-20261009。CITYWALK_E2E_OUTPUT 可指定独立结果目录，便于保留不同浏览器的证据。
 
 旧版升级测试默认读取 Git 提交5c32ee0中的原应用，用随机本机端口和独立浏览器数据测试真实旧 worker → 新 worker，不操作用户正式网站的数据。需要保留 Git 历史；CITYWALK_BASELINE_REF 可指定兼容的旧基线。
 
@@ -64,7 +66,7 @@ npm run preview
 
 ## 离线、记录与更新
 
-保留 /citywalk/、原 hash 地址、manifest id/start_url/scope、IndexedDB citywalk-for-two/state/current、所有存储 key 和跨标签频道。JSON 存档升级为 version:3，IndexedDB 的结构版本仍为1。支持 v1/v2 备份，先运行时校验，再在下一次成功保存的同一事务中迁移；只读打开及事务失败不改旧数据。48张卡 ID、原节点顺序、短途13/半日20目标及原计分保持。规则与主题内容保存快照，历史按自身规则解释；旧行程按随心探索解释，不重算积分。若还有 v1/v2 或无法识别的旧标签，新页保留输入并暂缓写入，关闭旧标签或让它应用更新后再重试。
+部署路径已迁到 /roam/，保留原 hash 地址；manifest id 固定为 /citywalk/，start_url/scope 随新路径解析。继续保留 IndexedDB citywalk-for-two/state/current、所有存储 key 和跨标签频道。JSON 存档升级为 version:3，IndexedDB 的结构版本仍为1。支持 v1/v2 备份，先运行时校验，再在下一次成功保存的同一事务中迁移；只读打开及事务失败不改旧数据。48张卡 ID、原节点顺序、短途13/半日20目标及原计分保持。规则与主题内容保存快照，历史按自身规则解释；旧行程按随心探索解释，不重算积分。若还有 v1/v2 或无法识别的旧标签，新页保留输入并暂缓写入，关闭旧标签或让它应用更新后再重试。
 
 构建后递归处理最终 JS/CSS、指纹 assets 和静态资源，生成 release.json、兼容 release.mjs 与 sw.js。内容版本不依赖手工数字；同输入重建得到同版本。下载全部资源并核对内容哈希后才标记离线准备完成；中断或不匹配会删除未完成缓存。只在玩家显式应用更新时跳过等待。
 

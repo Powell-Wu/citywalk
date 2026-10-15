@@ -42,7 +42,7 @@
 
 网页页头使用路线图标、roam 字标和中文名，首页更新品牌文案。纪念票页和导出的 PNG 显示品牌，备份下载采用新的中文前缀。
 
-网址、GitHub 仓库、`/citywalk/` 部署路径、package 内部标识、manifest `id/start_url/scope`、IndexedDB `citywalk-for-two/state/current`、全部存储 key 和更新频道保持原值。名称更新通过原 Service Worker 的内容版本机制发布；用户显式应用更新，旧记录继续读取。
+2026-10-15 按用户要求将 GitHub 仓库迁为 `Powell-Wu/roam`，网站部署路径迁为 `/roam/`。manifest `id` 显式保留 `/citywalk/`，`start_url/scope` 解析到新路径；package 内部标识、IndexedDB `citywalk-for-two/state/current`、全部存储 key 和更新频道保持原值。新路径使用 `roam-static-` 离线缓存命名空间，避免旧路径的 worker 清理新站缓存；旧路径仍打开的标签会阻止新版写入，关闭旧标签即可继续。名称更新通过原 Service Worker 的内容版本机制发布；用户显式应用更新，旧记录继续读取。
 
 旧版“一起走走”和讨论候选“岔路来信”等已退出正式命名。后续文档或新页面统一使用本规范。
 ## 验证记录

@@ -17,7 +17,7 @@ await server.listen();
 const browser=await chromium.launch({headless:true,...(process.env.CITYWALK_TEST_BROWSER==='chromium'?{}:{channel:process.env.CITYWALK_TEST_BROWSER||'msedge'})});
 try{
  const address=server.httpServer.address(),context=await browser.newContext({viewport:{width:390,height:844}}),page=await context.newPage(),errors=[];page.on('pageerror',error=>errors.push(error.message));
- await page.goto(`http://127.0.0.1:${address.port}/citywalk/__lifecycle.html`);await page.getByRole('button',{name:'领取通行证',exact:true}).waitFor();
+ await page.goto(`http://127.0.0.1:${address.port}/roam/__lifecycle.html`);await page.getByRole('button',{name:'领取通行证',exact:true}).waitFor();
  const cdp=await context.newCDPSession(page),listeners=async()=>{const r=await cdp.send('Runtime.evaluate',{expression:`JSON.stringify({hash:(getEventListeners(window).hashchange||[]).length,input:(getEventListeners(document).input||[]).length,visibility:(getEventListeners(document).visibilitychange||[]).length})`,includeCommandLineAPI:true,returnByValue:true});return JSON.parse(r.result.value);};
  const mounted=await listeners();await page.getByRole('button',{name:'直接试玩',exact:true}).click();await page.locator('[data-swipe-card]').waitFor();await page.locator('.card-options summary').click();await page.getByRole('button',{name:'完成',exact:true}).click();await page.locator('.branch-choice').waitFor();
  await page.locator('.journey-tools summary').click();await page.getByRole('button',{name:'撤销最近完成',exact:true}).click();await page.getByRole('dialog').waitFor();

@@ -163,7 +163,7 @@ async function applyUpdate(){
 const updater=createUpdater({serviceWorker:navigator.serviceWorker,secure:window.isSecureContext,signal:lifecycle.signal,onChange:s=>{
  ui.updateWaiting=s.available;ui.updateChecking=s.checking;ui.updateMessage=s.message;publish();syncUpdateUI();
 },reload:()=>location.reload()});
-async function checkCache(){try{if(!('caches' in window))return;const cache=await caches.open('citywalk-static-'+RELEASE);ui.offlineReady=!!await cache.match(new URL('./offline-ready',document.baseURI).href);document.querySelectorAll('[data-offline]').forEach(el=>el.textContent=ui.offlineReady?'✓ 离线内容已准备好':'离线尚未准备好，请联网打开并等待片刻。');}catch{ui.offlineReady=false;}}
+async function checkCache(){try{if(!('caches' in window))return;const cache=await caches.open('roam-static-'+RELEASE);ui.offlineReady=!!await cache.match(new URL('./offline-ready',document.baseURI).href);document.querySelectorAll('[data-offline]').forEach(el=>el.textContent=ui.offlineReady?'✓ 离线内容已准备好':'离线尚未准备好，请联网打开并等待片刻。');}catch{ui.offlineReady=false;}}
 async function prepareOffline(){if(import.meta.env.DEV)return;await updater.check();await checkCache();reportClientVersion();publish();}
 const reportClientVersion=()=>navigator.serviceWorker?.controller?.postMessage({type:'CLIENT_VERSION',version:RELEASE,schema:SCHEMA_VERSION});
 listen(navigator.serviceWorker,'message',e=>{if(e.data?.type==='CACHE_READY'){checkCache();reportClientVersion();}if(e.data?.type==='VERSION_REQUEST')reportClientVersion();});

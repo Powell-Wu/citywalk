@@ -10,12 +10,12 @@ const files=await staticFiles(dist),has=name=>files.includes(name);
 for(const file of files.filter(name=>/\.(mjs|js)$/.test(name)))execFileSync(process.execPath,['--check',path.join(dist,file)]);
 const checkURL=(url,from)=>{
  if(/^(?:https?:|data:|#)/.test(url))return;
- const name=url.startsWith('/citywalk/')?url.slice('/citywalk/'.length):url.startsWith('./')?path.posix.join(path.posix.dirname(from),url.slice(2)):url.startsWith('/')?null:path.posix.join(path.posix.dirname(from),url);
+ const name=url.startsWith('/roam/')?url.slice('/roam/'.length):url.startsWith('./')?path.posix.join(path.posix.dirname(from),url.slice(2)):url.startsWith('/')?null:path.posix.join(path.posix.dirname(from),url);
  assert(name&&has(name),`Missing or out-of-base asset ${url} in ${from}`);
 };
 for(const file of files.filter(name=>/\.(html|css)$/.test(name))){const text=await fs.readFile(path.join(dist,file),'utf8');for(const match of text.matchAll(/(?:src|href)="([^"]+)"|url\(\s*["']?([^"')\s]+)["']?\s*\)/g))checkURL(match[1]||match[2],file);}
 const manifest=JSON.parse(await fs.readFile(path.join(dist,'manifest.webmanifest'),'utf8'));
-assert.equal(manifest.id,'./');assert.equal(manifest.start_url,'./');assert.equal(manifest.scope,'./');for(const icon of manifest.icons)checkURL(icon.src,'manifest.webmanifest');
+assert.equal(manifest.id,'/citywalk/');assert.equal(manifest.start_url,'./');assert.equal(manifest.scope,'./');for(const icon of manifest.icons)checkURL(icon.src,'manifest.webmanifest');
 const sw=await fs.readFile(path.join(dist,'sw.js'),'utf8'),cached=JSON.parse(sw.match(/const FILES=(\[[^;]+);/)[1]);
 for(const file of files.filter(name=>name!=='sw.js'))assert(cached.includes('./'+file),`${file} missing offline cache entry`);
 assert(!files.some(name=>name.endsWith('.map')||name.startsWith('src/')),'Development sources shipped');

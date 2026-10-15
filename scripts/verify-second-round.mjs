@@ -30,7 +30,7 @@ try{
   if(width===390){await page.getByRole('button',{name:'保存纪念票图片',exact:true}).click();const downloadPromise=page.waitForEvent('download');await page.getByRole('link',{name:/^(保存图片|保存第 1 页)$/}).click();const download=await downloadPromise;await download.saveAs(`${output}/${key}.png`);assert.deepEqual([...(await fs.readFile(`${output}/${key}.png`)).subarray(0,8)],[137,80,78,71,13,10,26,10]);}
   results.push({test:'themed indoor zero-budget walk, draft/reload/offline/history/ticket',key,width,session:start.session.id,cards:final.history[0].slots.map(slot=>slot.card.id)});console.log('PASS theme '+key+' '+width);await context.close();
  }
- const baseline=await v2Baseline();let served=baseline.resources;const upgrade=await serveResources(()=>served),context=await browser.newContext({viewport:{width:390,height:844}}),page=await context.newPage();activePage=page;watch(page);let oldPage;
+ const baseline=await v2Baseline();let served=baseline.resources;const upgrade=await serveResources(()=>served,{aliases:['/citywalk/']}),context=await browser.newContext({viewport:{width:390,height:844}}),page=await context.newPage();activePage=page;watch(page);let oldPage;
  try{
   await page.goto(upgrade.base+'#settings');await page.locator('#reward-0').waitFor();await page.evaluate(()=>navigator.serviceWorker.ready);await page.reload();await page.waitForFunction(()=>!!navigator.serviceWorker.controller);
   const old=JSON.parse(await fs.readFile('tests/fixtures/v2-state.json','utf8'));await seed(page,old);await page.reload();await page.locator('#reward-0').fill('新版标签草稿');

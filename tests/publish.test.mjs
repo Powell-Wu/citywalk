@@ -16,7 +16,7 @@ function fixture({behind=0,ahead=0,changes=' M src/lib/domain/cards.mjs',fail=''
   calls.push([cmd,...args]);
   if(args[0]===fail)throw Error('simulated failure');
   if(args[0]==='branch')return 'main';
-  if(args[0]==='remote')return 'https://github.com/Powell-Wu/citywalk.git';
+  if(args[0]==='remote')return 'https://github.com/Powell-Wu/roam.git';
   if(args[0]==='diff')return args.some(arg=>arg.startsWith('--diff-filter=ACMRT'))?generatedStaged:args.includes('--cached')?staged:'';
   if(args[0]==='ls-files')return args.at(-1)==='dist'?legacyDist:tracked.filter(file=>file===args.at(-1)||file.startsWith(args.at(-1)+'/')).join('\n');
   if(args[0]==='rev-list')return `${ahead}\t${behind}`;

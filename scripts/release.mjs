@@ -18,7 +18,7 @@ export async function prepareRelease(directory,{check=false,template}={}){
  integrity['./']=integrity['./index.html'];
  integrity['./release.json']=createHash('sha256').update(releaseJSON).digest('hex');
  integrity['./release.mjs']=createHash('sha256').update(releaseModule).digest('hex');
- const output=normalized.replace('__CONTENT_VERSION__','citywalk-static-'+version).replace(`const FILES=${JSON.stringify(list)};`,`const FILES=[${list.map(name=>JSON.stringify(name)).join(',')}];\nconst INTEGRITY=${JSON.stringify(integrity)};`);
+ const output=normalized.replace('__CONTENT_VERSION__','roam-static-'+version).replace(`const FILES=${JSON.stringify(list)};`,`const FILES=[${list.map(name=>JSON.stringify(name)).join(',')}];\nconst INTEGRITY=${JSON.stringify(integrity)};`);
  const expected={'sw.js':output,'release.json':releaseJSON,'release.mjs':releaseModule};
  if(check){for(const [file,contents] of Object.entries(expected))if((await fs.readFile(path.join(directory,file),'utf8')).replaceAll('\r\n','\n')!==contents)throw Error('Release stamp is stale. Run npm run release before publishing.');}
  else for(const [file,contents] of Object.entries(expected))await fs.writeFile(path.join(directory,file),contents);

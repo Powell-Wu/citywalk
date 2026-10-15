@@ -12,7 +12,7 @@ const inScope=file=>!localDocs.some(p=>file===p||file.startsWith(p+'/'))&&(allow
 export async function publish({run,ask,log,open}){
  const git=(...args)=>run('git',args);
  if(git('branch','--show-current').trim()!=='main')throw Error('请切回 main 分支后发布。');
- if(!/^https:\/\/github\.com\/Powell-Wu\/citywalk(?:\.git)?\/?$/.test(git('remote','get-url','--push','origin').trim()))throw Error('origin 推送地址不是 Powell-Wu/citywalk，已停止。');
+ if(!/^https:\/\/github\.com\/Powell-Wu\/roam(?:\.git)?\/?$/.test(git('remote','get-url','--push','origin').trim()))throw Error('origin 推送地址不是 Powell-Wu/roam，已停止。');
  if(git('diff','--name-only','--diff-filter=U').trim())throw Error('存在未解决的合并冲突，请先处理。');
  const staged=git('diff','--cached','--name-only','-z').split('\0').filter(Boolean);
  if(staged.some(f=>!inScope(f)))throw Error('暂存区含项目发布范围外的文件，请先检查并取消暂存。');
@@ -44,8 +44,8 @@ export async function publish({run,ask,log,open}){
   git('commit','-m',message);
  }else log(`发现 ${ahead} 个尚未推送的本地提交，正在重试推送。`);
  git('push','origin','main');
- log('\n已推送到 GitHub。网站正在由 Actions 测试和部署；绿色成功后才算上线。\nhttps://github.com/Powell-Wu/citywalk/actions');
- open('https://github.com/Powell-Wu/citywalk/actions');
+ log('\n已推送到 GitHub。网站正在由 Actions 测试和部署；绿色成功后才算上线。\nhttps://github.com/Powell-Wu/roam/actions');
+ open('https://github.com/Powell-Wu/roam/actions');
 }
 
 if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1])).href){
