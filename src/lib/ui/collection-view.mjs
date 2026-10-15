@@ -3,7 +3,7 @@ import {cardArt} from './art.mjs';
 const names={scene:'探索委托',talk:'双人对话',event:'挑战任务'};
 export function collectionView(s,ui,{esc,button,editor}){
  const all=allCards(s),cards=all.filter(c=>(ui.libraryType==='all'||c.type===ui.libraryType)&&(!ui.libraryFavorites||s.favorites.includes(c.id)));
- return `<div class="collection-cover"><img src="./card-back.webp" alt="" width="64" height="86"><div><p class="eyebrow">双人冒险 · 任务收藏册</p><p>把想做的事，留给下一程。</p><span class="small muted">${all.length} 张任务 · ${s.favorites.length} 张喜欢</span></div></div>
+ return `<div class="collection-cover"><img src="./roam-pixel-album-v1.webp" alt="" width="64" height="86"><div><p class="eyebrow">双人冒险 · 任务收藏册</p><p>把想做的事，留给下一程。</p><span class="small muted">${all.length} 张任务 · ${s.favorites.length} 张喜欢</span></div></div>
  <div class="chips collection-tabs" role="group" aria-label="任务筛选">${[['all','全部'],...Object.keys(TYPES).map(k=>[k,names[k]])].map(([v,t])=>`<button type="button" class="chip ${ui.libraryType===v?'active':''}" aria-pressed="${ui.libraryType===v}" data-action="filter-type" data-type="${v}">${t}</button>`).join('')}<button type="button" class="chip ${ui.libraryFavorites?'active':''}" aria-pressed="${!!ui.libraryFavorites}" data-action="filter-favorites">只看喜欢</button></div>
  ${button(ui.customEditor?'收起自定义卡':'＋ 写一张自己的卡','show-editor','','outline')}<div class="spacer"></div>${ui.customEditor?editor():''}
  <p class="small muted" role="status">${cards.length} 张任务</p><div class="collection-grid">${cards.length?cards.map(c=>{

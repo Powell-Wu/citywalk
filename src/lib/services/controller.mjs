@@ -1,6 +1,7 @@
 import {SCHEMA_VERSION} from '../domain/rules.mjs';
 import {TYPES,REWARDS,uid,chooseBranch,initialState,allCards,score,elapsed,newSession,activeSession,draw,replaceCard,complete,setSlotStatus,undo,togglePause,finish,validateCustomCard,validateBackup} from '../domain/core.mjs';
 import {brand} from '../config/brand';
+import {keepsakeSummary} from '../domain/collection.mjs';
 import {renderTickets,showTicketDownload} from './ticket-export.mjs';
 import {createSounds} from '../interactions/sound.mjs';
 import {canWriteSchema} from './schema-guard.mjs';
@@ -21,7 +22,7 @@ const interval=(handler,delay)=>{const timer=setInterval(handler,delay);timers.a
 
 let state=initialState(),ready=false,busy=false,transitioning=false;
 let visibleState=state;
-const ui={phase:'idle',focusSlot:null,libraryType:'all',libraryFavorites:false,libraryCompleted:false,libraryDisabled:false,customEditor:false,offlineReady:false,storageError:'',schemaMessage:'',updateWaiting:false,updateChecking:false,updateMessage:'联网时会自动检查，也可以手动检查。'};
+const ui={phase:'idle',focusSlot:null,libraryView:'memories',libraryType:'all',libraryFavorites:false,libraryCompleted:false,libraryDisabled:false,customEditor:false,offlineReady:false,storageError:'',schemaMessage:'',updateWaiting:false,updateChecking:false,updateMessage:'联网时会自动检查，也可以手动检查。'};
 let draftStorage;try{draftStorage=sessionStorage;}catch{}
 const drafts=createDraftKeeper(draftStorage);
 let renderedContext=null;
@@ -51,7 +52,7 @@ function applyTheme(){
 async function chooseTheme(theme){await mutate(s=>setTheme(s,theme));applyTheme();}
 function skinsDialog(){
  const d=document.createElement('dialog');d.className='dialog skin-dialog';d.setAttribute('aria-labelledby','skin-title');
- d.innerHTML=`<div class="page-head"><h2 id="skin-title">主题</h2><button type="button" class="btn text" data-close>完成</button></div>${themePicker(state)}`;
+ d.innerHTML=`<div class="page-head"><h2 id="skin-title">外观</h2><button type="button" class="btn text" data-close>完成</button></div>${themePicker(state)}`;
  document.body.append(d);d.addEventListener('close',()=>d.remove(),{once:true});
  d.addEventListener('click',async e=>{if(e.target.closest('[data-close]')){d.close();return;}const b=e.target.closest('[data-theme-choice]');if(!b||b.disabled||busy)return;try{await chooseTheme(b.dataset.themeChoice);}catch(err){toast(err.message);}});
  d.showModal();
@@ -93,7 +94,7 @@ async function performCardAction(action,d){
   window.scrollTo({top:0,behavior:'instant'});
   if(animated){app.querySelector('.task-card')?.classList.add('card-enter');if(state.session&&score(state.session).total>before)app.querySelector('.score-value')?.classList.add('score-pop');}
   if(restoreFocus){const next=app.querySelector('.card-reverse')||app.querySelector('.task-card h2')||app.querySelector('main h1');if(next?.tagName!=='BUTTON')next?.setAttribute('tabindex','-1');next?.focus({preventScroll:true});}
-  if(animated&&action==='complete')await showCompletion({signal:lifecycle.signal,points:score(state.session).total-before,scoring:state.session.scoring,milestone:rewardMilestone(state.session,before)});
+  if(animated&&action==='complete')await showCompletion({signal:lifecycle.signal,points:score(state.session).total-before,scoring:state.session.scoring,milestone:rewardMilestone(state.session,before),compact:true});
   const gained=state.session?score(state.session).total-before:0;
   if(action==='replace')toast('已换卡');
   else if(!animated)toast(gained>0?`任务完成 · +${gained} 分`:'任务完成');
@@ -110,6 +111,9 @@ case'start-trial':await mutate(s=>{newSession(s,{...s.preferences,mode:'trial'})
 case'branch':await mutate(s=>chooseBranch(s,d.session,d.branch));break;
 case'export-ticket':{const latest=await readState(),journey=latest.history.find(x=>x.id===d.id);if(!journey)throw Error('这段记录已变化，请重新打开。');const blobs=await renderTickets(journey,brand.shortName);if(!disposed)showTicketDownload(blobs,journey.name,toast);return;}
 case'toggle-sound':{sounds.setEnabled(!state.sound);sounds.unlock();try{await mutate(s=>{s.sound=!s.sound;});}finally{sounds.setEnabled(state.sound);}break;}
+case'library-view':ui.libraryView=d.view==='cards'?'cards':'memories';break;
+case'album':ui.libraryView='memories';go('library');render();return;
+case'plan-theme':{if(state.session){go('setup');return;}go('setup');render();const form=app.querySelector('#setup-form');for(const input of form.querySelectorAll('[name=mode]'))input.checked=input.value==='short';for(const input of form.querySelectorAll('[name=journeyTheme]'))input.checked=input.value===d.theme;form.dispatchEvent(new Event('change',{bubbles:true}));captureDrafts();return;}
 case'filter-completed':ui.libraryCompleted=!ui.libraryCompleted;break;
 case'filter-disabled':ui.libraryDisabled=!ui.libraryDisabled;break;
 case'draw':{const oldCard=app.querySelector('.task-card');let turn;transitioning=true;ui.phase='drawing';try{ui.focusSlot=await mutate(s=>draw(s,d.session,d.slot,d.type));sounds.play('flip');turn=await animateCardTurn(oldCard,false,lifecycle.signal);render();turn?.cancel();turn=null;turn=await animateCardTurn(app.querySelector('.task-card'),true,lifecycle.signal);const card=app.querySelector('.task-card');card?.focus({preventScroll:true});}finally{turn?.cancel();transitioning=false;ui.phase='idle';publish();}return;}
@@ -119,11 +123,11 @@ case'skip':await mutate(s=>setSlotStatus(s,d.session,d.slot,'skipped'));ui.focus
 case'pause':await mutate(s=>togglePause(s,d.session));break;
 case'focus':ui.focusSlot=d.slot;break;
 case'undo':if(await confirmBox('撤销最近一次完成？','这张卡会回到待完成，相关分数和任务花费也会恢复。','撤销完成'))ui.focusSlot=await mutate(s=>undo(s,d.session));break;
-case'bonus':{const before=score(state.session).total;await mutate(s=>{const se=activeSession(s,d.session);if(!['surprise','laugh'].includes(d.key))throw Error('奖励不存在。');se.bonuses[d.key]=!se.bonuses[d.key];});const milestone=rewardMilestone(state.session,before);if(milestone){sounds.play('reward');transitioning=true;try{await showCompletion({signal:lifecycle.signal,points:score(state.session).total-before,milestone});}finally{transitioning=false;}}break;}
+case'bonus':{const before=score(state.session).total;await mutate(s=>{const se=activeSession(s,d.session);if(!['surprise','laugh'].includes(d.key))throw Error('奖励不存在。');se.bonuses[d.key]=!se.bonuses[d.key];});const milestone=rewardMilestone(state.session,before);if(milestone){sounds.play('reward');transitioning=true;try{await showCompletion({signal:lifecycle.signal,points:score(state.session).total-before,milestone,compact:true});}finally{transitioning=false;}}break;}
 case'filters':filtersDialog();return;
 case'filter-type':ui.libraryType=d.type;break;
 case'filter-favorites':ui.libraryFavorites=!ui.libraryFavorites;break;
-case'show-editor':ui.customEditor=!ui.customEditor;break;
+case'show-editor':ui.libraryView='cards';ui.customEditor=!ui.customEditor;break;
 case'favorite':case'disable-card':await mutate(s=>{if(!allCards(s).some(c=>c.id===d.card))throw Error('卡片不存在。');const key=d.action==='favorite'?'favorites':'disabled';s[key]=s[key].includes(d.card)?s[key].filter(x=>x!==d.card):[...s[key],d.card];});break;
 case'export':await exportBackup();return;
 case'import':document.querySelector('#backup-file').click();return;
@@ -133,10 +137,10 @@ case'check-update':await updater.check(true);return;
 case'apply-update':await applyUpdate();return;
 }render();}catch(e){toast(e.message||'刚才的操作没有成功，请重试。');if(ui.storageError)render();}});
 listen(document,'submit',async event=>{const f=event.target;if(!['setup-form','finish-form','reward-form','card-form','filters-form'].includes(f.id))return;event.preventDefault();if(busy||transitioning||!f.reportValidity())return;const data=new FormData(f),submit=f.querySelector('[type="submit"]');let savedCardId;submit.disabled=true;try{switch(f.id){
-case'setup-form':await mutate(s=>{newSession(s,{mode:data.get('mode'),journeyTheme:data.get('journeyTheme')||'mixed',place:data.get('place'),budget:Number(data.get('budget')),scoring:data.has('scoring'),rewards:s.preferences.rewards});if(s.session.mode==='trial')draw(s,s.session.id,s.session.slots[0].id);});discardDraft('setup-form');ui.focusSlot=null;go('walk');break;
-case'finish-form':{const before=score(state.session).total;const id=await mutate(s=>finish(s,f.dataset.session,{name:data.get('name'),memory:data.get('memory'),closing:data.has('closing')}));discardDraft('finish-form');go(`detail/${id}`);toast('记录已保存');const saved=state.history.find(h=>h.id===id),milestone=rewardMilestone(saved,before);if(milestone){transitioning=true;try{await showCompletion({signal:lifecycle.signal,points:score(saved).total-before,milestone});}finally{transitioning=false;}}break;}
+case'setup-form':await mutate(s=>{const trial=data.get('mode')==='trial';newSession(s,{mode:data.get('mode'),journeyTheme:data.get('journeyTheme')||'mixed',place:trial?'both':data.get('place'),budget:trial?0:Number(data.get('budget')),scoring:!trial&&data.has('scoring'),rewards:[0,1,2].map(i=>String(data.get(`reward${i}`)??s.preferences.rewards[i]))});if(s.session.mode==='trial')draw(s,s.session.id,s.session.slots[0].id);});discardDraft('setup-form');ui.focusSlot=null;go('walk');break;
+case'finish-form':{const before=score(state.session).total;const id=await mutate(s=>finish(s,f.dataset.session,{name:data.get('name'),memory:data.get('memory'),closing:data.has('closing')}));discardDraft('finish-form');go(`detail/${id}`);toast('记录已保存');const saved=state.history.find(h=>h.id===id),milestone=rewardMilestone(saved,-1);if(milestone){transitioning=true;try{await showCompletion({signal:lifecycle.signal,points:score(saved).total-before,milestone,closing:true,newBadges:keepsakeSummary(state,id).newBadges.map(badge=>badge.name)});}finally{transitioning=false;}}break;}
 case'reward-form':await mutate(s=>{s.preferences.rewards=[0,1,2].map(i=>String(data.get(`reward${i}`)).trim().slice(0,80)||REWARDS[i]);});discardDraft('reward-form');toast('奖励已保存，下局生效');break;
-case'card-form':{const artKey=data.get('artKey');const card={id:'custom-'+uid(),type:data.get('type'),text:String(data.get('text')).trim(),note:String(data.get('note')).trim(),minutes:Number(data.get('minutes')),cost:Number(data.get('cost')),place:data.get('place'),source:'custom',...(artKey&&artKey!=='auto'?{artKey}: {})};validateCustomCard(card);await mutate(s=>{if(s.customCards.length>=500)throw Error('自定义卡片已达到500张上限。');s.customCards.push(card);});discardDraft('card-form');ui.customEditor=false;ui.libraryType='all';ui.libraryFavorites=false;ui.libraryCompleted=false;ui.libraryDisabled=false;savedCardId=card.id;toast('卡片已添加');break;}
+case'card-form':{const artKey=data.get('artKey');const card={id:'custom-'+uid(),type:data.get('type'),text:String(data.get('text')).trim(),note:String(data.get('note')).trim(),minutes:Number(data.get('minutes')),cost:Number(data.get('cost')),place:data.get('place'),source:'custom',...(artKey&&artKey!=='auto'?{artKey}: {})};validateCustomCard(card);await mutate(s=>{if(s.customCards.length>=500)throw Error('自定义卡片已达到500张上限。');s.customCards.push(card);});discardDraft('card-form');ui.customEditor=false;ui.libraryView='cards';ui.libraryType='all';ui.libraryFavorites=false;ui.libraryCompleted=false;ui.libraryDisabled=false;savedCardId=card.id;toast('卡片已添加');break;}
 case'filters-form':await mutate(s=>{const se=activeSession(s,f.dataset.session);const budget=Number(data.get('budget')),place=data.get('place');if(se.mode==='trial')throw Error('试玩使用零消费任务，其他设置留到正式散步吧。');if(!Number.isFinite(budget)||budget<0||budget>10000||!['both','indoor','outdoor'].includes(place))throw Error('请检查预算和场景。');se.budget=budget;se.place=place;});discardDraft('filters-form');f.closest('dialog').close();toast('筛选已更新');break;
 }render();if(savedCardId){const title=app.querySelector(`[data-library-card="${savedCardId}"] h2`);title?.setAttribute('tabindex','-1');title?.focus({preventScroll:true});title?.closest('article')?.scrollIntoView({block:'center',behavior:'instant'});}}catch(e){toast(e.message||'保存失败，请重试。');if(ui.storageError){const p=document.createElement('p');p.className='storage-error';p.textContent=ui.storageError;f.prepend(p);}}finally{submit.disabled=false;}});
 async function exportBackup(){const latest=await readState();const blob=new Blob([JSON.stringify(latest,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`${brand.shortName}-备份-${new Date().toISOString().slice(0,10)}.json`;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);toast('备份已生成，请在下载文件中确认保存。');}
@@ -173,7 +177,14 @@ listen(document,'visibilitychange',()=>{if(document.visibilityState==='visible'&
 interval(()=>{if(document.visibilityState==='visible')updater.check();},15*60*1000);
 let registered=false;
 function registerAgentTools(){const ctx=document.modelContext;if(!ctx?.registerTool||registered)return;registered=true;const list=[{name:'read_citywalk_state',description:'Read the current shared-phone walk, score and current card without altering records.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:true},execute(input={}){if(Object.keys(input).length)throw Error('No arguments accepted');const se=state.session;return se?{id:se.id,mode:se.mode,score:score(se),paused:!!se.pausedAt,current:currentSlot(se,ui.focusSlot)}:{active:false,historyCount:state.history.length};}},{name:'draw_citywalk_card',description:'Draw a card in the active walk using the same filters and deduplication as the interface. Does not mark it complete.',inputSchema:{type:'object',properties:{type:{type:'string',enum:['scene','talk','event']}},additionalProperties:false},annotations:{readOnlyHint:false,untrustedContentHint:true},async execute(input={}){if(transitioning)throw Error('Wait for the current card');if(Object.keys(input).some(k=>k!=='type')||(input.type&&!TYPES[input.type]))throw Error('Invalid card type');if(!state.session)throw Error('Start a walk in the interface first');const se=state.session,x=currentSlot(se,ui.focusSlot);if(x&&x.status!=='waiting')throw Error('Current card must be finished or skipped first');if(!x&&!input.type)throw Error('Choose a card type');ui.focusSlot=await mutate(s=>draw(s,se.id,x?.id,input.type));go('walk');render();return{card:state.session.slots.find(x=>x.id===ui.focusSlot).card};}}];for(const tool of list){try{Promise.resolve(ctx.registerTool(tool,{signal:lifecycle.signal})).catch(()=>{});}catch{}}}
-async function boot(){try{state=await readState();ready=true;ui.storageError='';Object.assign(ui,drafts.readView(draftContext()));try{Object.assign(ui,readUpdateView(sessionStorage));}catch{}render();try{restoreUpdateDraft(document,sessionStorage,draftContext());}catch{}registerAgentTools();prepareOffline();}catch(e){ready=false;ui.storageError=e.message;publish();}}
+function prepareAfterPaint(){
+ const start=()=>requestAnimationFrame(()=>requestAnimationFrame(()=>{if(!disposed)prepareOffline();}));
+ const hero=app.querySelector('.roam-hero .journey-art');
+ // Let the first illustration paint before the full offline package is hashed
+ // and cached. A player's earlier action still starts preparation in mutate().
+ if(hero)hero.decode().catch(()=>{}).then(start);else start();
+}
+async function boot(){try{state=await readState();ready=true;ui.storageError='';Object.assign(ui,drafts.readView(draftContext()));try{Object.assign(ui,readUpdateView(sessionStorage));}catch{}render();try{restoreUpdateDraft(document,sessionStorage,draftContext());}catch{}registerAgentTools();prepareAfterPaint();}catch(e){ready=false;ui.storageError=e.message;publish();}}
 void (async()=>{try{if(!import.meta.env.DEV){const response=await fetch(new URL('release.json',document.baseURI));if(!response.ok)throw Error('版本信息读取失败');RELEASE=(await response.json()).version;}}catch(error){ui.storageError=error.message;publish();return;}if(!disposed)await boot();})();
 return {dispose(){captureDrafts();disposed=true;lifecycle.abort();for(const timer of timers)clearInterval(timer);clearTimeout(toast.timer);gestures.destroy();sounds.dispose();channel?.close();document.querySelectorAll('dialog.dialog,dialog.reward-dialog').forEach(dialog=>dialog.close());}};
 }

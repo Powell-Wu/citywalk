@@ -12,5 +12,5 @@ export function restoreTheme(state, theme) {
   state.theme = 'adventure';
 }
 export function themePicker() {
-  return `<div class="theme-options" role="group" aria-label="主题"><button type="button" class="theme-option" aria-pressed="true" data-action="set-theme" data-theme-choice="adventure"><span class="theme-option-title">双人冒险 <span class="theme-selected">使用中</span></span></button><button type="button" class="theme-option" disabled aria-disabled="true"><span class="theme-option-title">暖日散步</span><span class="theme-description">暂未开放</span></button></div>`;
+  return `<div class="theme-options" role="group" aria-label="外观"><button type="button" class="theme-option" aria-pressed="true" data-action="set-theme" data-theme-choice="adventure"><span class="theme-option-title">双人冒险 <span class="theme-selected">使用中</span></span></button><button type="button" class="theme-option" disabled aria-disabled="true"><span class="theme-option-title">暖日散步</span><span class="theme-description">暂未开放</span></button></div>`;
 }

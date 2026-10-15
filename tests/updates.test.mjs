@@ -23,7 +23,7 @@ test('first install does not advertise its transient waiting worker as an update
 });
 test('new worker download updates controls without a page render; concurrent checks deduplicate',async()=>{
  const f=fixture();await f.app.check();const worker=new Emitter();worker.state='installing';f.reg.installing=worker;f.reg.emit('updatefound');
- const a=f.app.check(true),b=f.app.check(true);await Promise.resolve();await Promise.resolve();
+ const a=f.app.check(true),b=f.app.check(true);await new Promise(resolve=>setImmediate(resolve));
  worker.state='installed';f.reg.waiting=worker;f.reg.installing=null;worker.emit('statechange');await Promise.all([a,b]);
  assert.equal(f.app.getState().available,true);assert.equal(f.updates,2);assert.equal(f.reloads,0);
 });

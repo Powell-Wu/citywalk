@@ -28,7 +28,7 @@
 [data-theme=adventure] .nav button.active{background:#e7f0e7;color:var(--green)}
 .shell[data-page=walk] .solid-deck .solid-card{border:4px solid #19394f;border-radius:5px;padding:6px;box-shadow:inset 0 0 0 2px #e5c782,3px 4px 0 #17354d20}
 .shell[data-page=walk] .solid-deck .card-back{border:4px solid #19394f;border-radius:5px;box-shadow:inset 0 0 0 5px var(--white)}
-.shell[data-page=walk] .solid-deck .card-front{grid-template-rows:10% 50% 40%}.shell[data-page=walk] .solid-deck .card-heading{background:var(--white);border-bottom:1px solid var(--line);padding:0 8px;font-size:12px}.shell[data-page=walk] .quest-emblem{width:18px;height:18px;shape-rendering:auto}
+.shell[data-page=walk] .solid-deck .card-heading{background:var(--white);border-bottom:1px solid var(--line);padding:0 8px;font-size:12px}.shell[data-page=walk] .quest-emblem{width:18px;height:18px;shape-rendering:auto}
 .shell[data-page=walk] .solid-deck .quest-art-frame{position:relative;background:var(--paper);padding:8px;overflow:hidden}.task-postmark{position:absolute;width:58px;right:4px;bottom:-4px;transform:rotate(-15deg);opacity:.85}
 .shell[data-page=walk] .solid-deck .task-copy{background:var(--white);border-top:1px solid var(--line);padding-top:10px}.shell[data-page=walk] .solid-deck .task-card h2{font-size:1.0625rem;line-height:1.45;max-height:4.35em}.shell[data-page=walk] .solid-deck .task-meta{border-color:var(--line)}.shell[data-page=walk] .solid-deck .quest-value{font-size:12px;color:var(--rust)}
 .route-stop .route-symbol{border-radius:50%}.walk-status{padding-bottom:5px;border-bottom:1px solid var(--line)}
@@ -71,5 +71,5 @@
 @media(max-width:700px){.hero-copy h1{font-size:2.65rem}.memoir-cover>h2{line-height:1.5;letter-spacing:.1em}.hero-seal{width:64px;right:-4px;bottom:-14px}.memoir-cover>small{bottom:12px}.hero-copy .eyebrow{font-size:10px}.hero-copy .hero-description{font-size:13px}}
 @media(max-width:360px){.hero-copy h1{font-size:2.4rem}}
 @media(min-height:501px){.shell[data-page=walk] .solid-deck{--card-width:min(360px,calc((100svh - 408px - max(0px,var(--walk-safe-top) - 12px) - var(--walk-safe-bottom))*5/7))}}
-.shell[data-page=walk] .solid-deck{width:min(100%,max(160px,var(--card-width)))}
+.shell[data-page=walk] .solid-deck{width:min(100%,max(195px,var(--card-width)))}
 @media(min-width:701px) and (min-height:501px){.shell[data-page=walk] .solid-deck{--card-width:min(360px,calc((100svh - 432px - max(0px,var(--walk-safe-top) - 12px) - var(--walk-safe-bottom))*5/7))}}

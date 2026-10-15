@@ -14,7 +14,6 @@ const files=[
  ['batch-03-rewards/01-chest-closed-v1.png','chest-closed.webp',400],
  ['batch-03-rewards/02-chest-open-v1.png','chest-open.webp',400],
  ['batch-03-rewards/03-explorer-badge-v1.png','explorer-badge.webp',256],
- ['batch-03-rewards/04-card-back-v1.png','card-back.webp',480],
  ['batch-04-journey/01-departure-v1.png','journey-departure.webp',960],
  ['batch-04-journey/02-keepsake-v1.png','journey-keepsake.webp',960],
  ['batch-05-task-matching/01-photo-v1.png','art-photo.webp',540],

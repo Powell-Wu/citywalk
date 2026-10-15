@@ -1,7 +1,7 @@
 const KEY='citywalk-update-draft';
 const FORM_KEY='citywalk-form-drafts',MAX_AGE=12*60*60*1000;
 const forms=['actual-cost','setup-form','finish-form','card-form','reward-form','filters-form'];
-const cleanView=view=>({customEditor:!!view.customEditor,libraryType:['all','scene','talk','event'].includes(view.libraryType)?view.libraryType:'all',libraryFavorites:!!view.libraryFavorites,libraryCompleted:!!view.libraryCompleted,libraryDisabled:!!view.libraryDisabled,focusSlot:typeof view.focusSlot==='string'&&/^[a-zA-Z0-9-]{1,100}$/.test(view.focusSlot)?view.focusSlot:null});
+const cleanView=view=>({libraryView:view.libraryView==='cards'?'cards':'memories',customEditor:!!view.customEditor,libraryType:['all','scene','talk','event'].includes(view.libraryType)?view.libraryType:'all',libraryFavorites:!!view.libraryFavorites,libraryCompleted:!!view.libraryCompleted,libraryDisabled:!!view.libraryDisabled,focusSlot:typeof view.focusSlot==='string'&&/^[a-zA-Z0-9-]{1,100}$/.test(view.focusSlot)?view.focusSlot:null});
 const fieldsOf=element=>element.id==='actual-cost'?[element]:[...element.querySelectorAll('input,textarea,select')];
 const fieldData=el=>({id:el.id,name:el.name,type:el.type,value:el.value,checked:el.checked});
 function applyFields(elements,fields){
@@ -47,10 +47,10 @@ export function createDraftKeeper(storage){
 }
 export function saveUpdateDraft(document,storage,context,view={}){
  const fields=[...document.querySelectorAll('input,textarea,select')].filter(el=>el.type!=='file'&&el.type!=='password'&&(el.id||el.name)).map(el=>({id:el.id,name:el.name,form:el.form?.id||'',type:el.type,value:el.value,checked:el.checked}));
- storage.setItem(KEY,JSON.stringify({context,fields,view:{customEditor:!!view.customEditor,libraryType:view.libraryType,libraryFavorites:!!view.libraryFavorites,libraryCompleted:!!view.libraryCompleted,libraryDisabled:!!view.libraryDisabled,focusSlot:view.focusSlot},at:Date.now()}));
+ storage.setItem(KEY,JSON.stringify({context,fields,view:{libraryView:view.libraryView,customEditor:!!view.customEditor,libraryType:view.libraryType,libraryFavorites:!!view.libraryFavorites,libraryCompleted:!!view.libraryCompleted,libraryDisabled:!!view.libraryDisabled,focusSlot:view.focusSlot},at:Date.now()}));
 }
 export function readUpdateView(storage){
- try{const d=JSON.parse(storage.getItem(KEY));if(!d||Date.now()-d.at>3600000)return {};const v=d.view||{};return {customEditor:!!v.customEditor,libraryFavorites:!!v.libraryFavorites,libraryCompleted:!!v.libraryCompleted,libraryDisabled:!!v.libraryDisabled,libraryType:['all','scene','talk','event'].includes(v.libraryType)?v.libraryType:'all',focusSlot:typeof v.focusSlot==='string'&&/^[a-zA-Z0-9-]{1,100}$/.test(v.focusSlot)?v.focusSlot:null};}catch{return {};}
+ try{const d=JSON.parse(storage.getItem(KEY));if(!d||Date.now()-d.at>3600000)return {};const v=d.view||{};return {libraryView:v.libraryView==='cards'?'cards':'memories',customEditor:!!v.customEditor,libraryFavorites:!!v.libraryFavorites,libraryCompleted:!!v.libraryCompleted,libraryDisabled:!!v.libraryDisabled,libraryType:['all','scene','talk','event'].includes(v.libraryType)?v.libraryType:'all',focusSlot:typeof v.focusSlot==='string'&&/^[a-zA-Z0-9-]{1,100}$/.test(v.focusSlot)?v.focusSlot:null};}catch{return {};}
 }
 export function restoreUpdateDraft(document,storage,context){
  const text=storage.getItem(KEY);if(!text)return;

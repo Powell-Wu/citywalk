@@ -23,7 +23,7 @@
 {#if !snapshot}<div class="loading">正在打开今天的散步…</div>
 {:else if !snapshot.ready}<div class="shell"><div class="panel"><h1>先把回忆安顿好</h1><p>{snapshot.ui.storageError}</p><p>为避免记录丢失，暂时没有开始新一局。请使用普通浏览窗口，检查网站存储权限后重试。</p><ActionButton label="重新打开" action="reload" kind="block"/></div></div>
 {:else}
-<div class="shell" data-page={snapshot.name}><header class="brand"><BrandLockup/><div class="brand-tools"><span class="brand-meta">{brand.subtitle}</span><ActionButton label="主题" action="skins" kind="outline icon skin-trigger" attrs={{'aria-haspopup':'dialog'}}/></div></header>
+<div class="shell" data-page={snapshot.name}><header class="brand"><BrandLockup/><div class="brand-tools"><span class="brand-meta">{brand.subtitle}</span></div></header>
 {#if snapshot.ui.storageError}<div role="alert" class="storage-error">{snapshot.ui.storageError} <ActionButton label="重试" action="reload" kind="outline"/></div>{/if}
 <aside class={`notice ${snapshot.ui.updateWaiting?'':'hidden'}`} data-update-banner aria-label="版本更新"><span>新版本已就绪，进度会保留。</span> <ActionButton label="应用更新" action="apply-update" kind="outline icon"/></aside>
 {#if snapshot.ui.schemaMessage}<aside class="notice" role="status" data-schema-status>{snapshot.ui.schemaMessage}</aside>{/if}
@@ -48,4 +48,13 @@
 .shell[data-page=walk]~.nav{padding-bottom:calc(8px + var(--walk-safe-bottom))}
 :global([data-theme=adventure]) .shell[data-page=walk] .brand{margin-bottom:8px;padding-bottom:6px;min-height:44px}
 @media(min-width:800px){.shell[data-page=walk] :global(.page){max-width:720px}}
+@media(max-width:700px) and (max-height:760px){
+ :global([data-theme=adventure]) .shell[data-page=walk] .brand{min-height:24px;padding-bottom:3px;margin-bottom:4px}
+ .shell[data-page=walk] .brand :global(.roam-symbol){width:22px;height:22px}
+ .shell[data-page=walk] .brand :global(.roam-wordmark){width:64px}
+ .shell[data-page=walk] .brand :global(.roam-type span){display:none}
+ .shell[data-page=walk] :global(.route-stop){flex-direction:row;justify-content:center;gap:3px}
+ .shell[data-page=walk] :global(.route-symbol){width:14px;height:14px;flex:none;font-size:.625rem}
+ .shell[data-page=walk] :global(.route-stop>span:nth-child(2)){min-width:0}
+}
 </style>
