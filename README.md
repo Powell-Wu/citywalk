@@ -6,7 +6,7 @@ GitHub 仓库：[Powell-Wu/roam](https://github.com/Powell-Wu/roam)。[仓库与
 
 ## 项目资料
 
-统一入口：[项目资料索引](docs/README.md)。第三方玩家评审优化已完成本机实现，包含首屏配合与完成按钮、主题做法、六枚纪念章及原地奖励编辑；最新验证见[评审优化实施](docs/reports/PLAYER-REVIEW-IMPLEMENTATION-20261014.md)。此前发布基线为 `r-d4a6d340274f` / `957be6c`。真实设备与双人试玩按用户要求暂缓。
+统一入口：[项目资料索引](docs/README.md)。第三方玩家评审优化已完成实现及云端完整回归，验收版本 `r-dffed68f37b4`，包含首屏配合与完成按钮、主题做法、六枚纪念章及原地奖励编辑；验证与发布核验说明见[评审优化实施](docs/reports/PLAYER-REVIEW-IMPLEMENTATION-20261014.md)。此前发布基线为 `r-d4a6d340274f` / `957be6c`。真实设备与双人试玩按用户要求暂缓。
 
 - [当前路线图](docs/plans/ROADMAP.md)：已完成范围、剩余验收和后续决策。
 - [执行总纲](docs/plans/GAME-IMPLEMENTATION-BRIEF.md)：架构、视觉、数据兼容与验收约束。

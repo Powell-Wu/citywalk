@@ -11,6 +11,8 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      release: ${{ steps.release.outputs.version }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -24,6 +26,9 @@ jobs:
       - run: npm test
       - run: npm run build
       - run: npm run check
+      - name: Record content version
+        id: release
+        run: node -e 'console.log("version=" + JSON.parse(require("node:fs").readFileSync("dist/release.json", "utf8")).version)' >> "$GITHUB_OUTPUT"
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
         env:
@@ -50,3 +55,44 @@ jobs:
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
+      - name: Verify published version and resources
+        env:
+          SITE_URL: ${{ steps.deployment.outputs.page_url }}
+          EXPECTED_RELEASE: ${{ needs.build.outputs.release }}
+        run: |
+          python3 - <<'PYTHON'
+          import hashlib
+          import json
+          import os
+          import re
+          import time
+          import urllib.request
+
+          base = os.environ['SITE_URL'].rstrip('/') + '/'
+          expected = os.environ['EXPECTED_RELEASE']
+          assert re.fullmatch(r'r-[0-9a-f]{12}', expected), expected
+
+          def fetch(relative):
+              request = urllib.request.Request(base + relative, headers={'Cache-Control': 'no-cache'})
+              with urllib.request.urlopen(request, timeout=30) as response:
+                  assert response.status == 200
+                  return response.read()
+
+          for attempt in range(12):
+              try:
+                  release = json.loads(fetch('release.json'))['version']
+                  assert release == expected, f'Expected {expected}, received {release}'
+                  worker = fetch('sw.js').decode('utf-8')
+                  assert f"const CACHE='roam-static-{expected}';" in worker
+                  integrity = json.loads(re.search(r'const INTEGRITY=([^;]+);', worker).group(1))
+                  assert './index.html' in integrity and './release.json' in integrity
+                  for relative, digest in integrity.items():
+                      assert hashlib.sha256(fetch(relative)).hexdigest() == digest, relative
+                  print(json.dumps({'url': base, 'release': release, 'verifiedResources': len(integrity)}))
+                  break
+              except Exception as error:
+                  print(f'Published content check {attempt + 1}/12: {error}', flush=True)
+                  if attempt == 11:
+                      raise
+                  time.sleep(10)
+          PYTHON
